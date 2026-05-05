@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>08. 拡張子なしURL — Grab All Files テスト</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="site"><h1>08. 拡張子のない URL（推定検出パターン）</h1></header>
+  <nav class="top"><a href="../index.html">← トップ</a></nav>
+
+  <div class="note">
+    URL に <code>.pdf</code> 等の拡張子が含まれないが、クラウドストレージ・LMS・CMS のダウンロードルートとして
+    認識されるべきパターンを並べています。これらは外部ドメインへの参照リンクなのでこのテストサイト内では
+    実体ファイルにヒットしませんが、拡張機能の検出器がこれらの「形」を拾えるかを確認できます。
+  </div>
+
+  <h2>クラウドストレージ（拡張子なし / クエリで MIME 指定）</h2>
+  <ul class="files">
+    <li><a href="https://example-bucket.s3.amazonaws.com/path/document?response-content-type=application%2Fpdf">S3: response-content-type=application/pdf</a></li>
+    <li><a href="https://example-bucket.s3.amazonaws.com/private/file?response-content-disposition=attachment%3B%20filename%3Dreport.pdf">S3: response-content-disposition=attachment; filename=report.pdf</a></li>
+    <li><a href="https://storage.googleapis.com/example-gcs/asset?filename=quarterly.xlsx">GCS: ?filename=quarterly.xlsx</a></li>
+    <li><a href="https://example.r2.cloudflarestorage.com/private/abc123?SourceUrl=resource.docx">Cloudflare R2: ?SourceUrl=resource.docx</a></li>
+    <li><a href="https://f000.backblazeb2.com/file/example/asset?filepath=archive.zip">Backblaze B2: ?filepath=</a></li>
+    <li><a href="https://example.blob.core.windows.net/private/blob123">Azure Blob (拡張子なし)</a></li>
+    <li><a href="https://example.s3.wasabisys.com/private/blob123?response-content-type=image%2Fpng">Wasabi: response-content-type=image/png</a></li>
+  </ul>
+
+  <h2>LMS / CMS のダウンロードルート</h2>
+  <ul class="files">
+    <li><a href="https://moodle.example.edu/pluginfile.php/123/mod_resource/content/0/lecture-notes.pdf">Moodle <code>pluginfile.php</code></a></li>
+    <li><a href="https://canvas.example.edu/courses/42/files/9999/download">Canvas <code>/courses/*/files/*/download</code></a></li>
+    <li><a href="https://blackboard.example.edu/bbcswebdav/courses/CS101/syllabus.docx">Blackboard <code>/bbcswebdav/</code></a></li>
+    <li><a href="https://liferay.example.com/c/document_library/get_file?fileEntryId=12345">Liferay <code>fileEntryId</code></a></li>
+    <li><a href="https://liferay.example.com/web/guest/-/document_view/-/manual_browse/12345">Liferay <code>manual_browse</code></a></li>
+  </ul>
+
+  <h2>メール / Workplace 添付</h2>
+  <ul class="files">
+    <li><a href="https://mail.google.com/mail/u/0/?ui=2&amp;ik=abc&amp;view=att&amp;disp=safe&amp;th=foo">Gmail attachment (disp=safe)</a></li>
+    <li><a href="https://outlook.office365.com/mail/attachments/abc123">Outlook 添付ルート</a></li>
+    <li><a href="https://example.my.salesforce.com/sfc/servlet.shepherd/document/download/069XXXXXXXX">Salesforce ContentDocument</a></li>
+  </ul>
+
+  <h2>文書ホスティング</h2>
+  <ul class="files">
+    <li><a href="https://issuu.com/sample/docs/sample-publication">Issuu</a></li>
+    <li><a href="https://www.scribd.com/document/12345/sample">Scribd</a></li>
+    <li><a href="https://www.researchgate.net/publication/12345">ResearchGate</a></li>
+    <li><a href="https://www.slideshare.net/sample/sample-deck">SlideShare</a></li>
+  </ul>
+</div>
+</body>
+</html>

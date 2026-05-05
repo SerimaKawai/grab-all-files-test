@@ -1,0 +1,2 @@
+Place exported scan logs (gaf-log_*.json) in this directory for analysis.
+See ../LOG_ANALYSIS.md for the schema and analysis flow.

@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>11. プラットフォーム特化検出 — Grab All Files テスト</title>
+<link rel="stylesheet" href="../assets/style.css">
+<style>
+  .mock { border: 1px dashed var(--border); padding: 12px; border-radius: 6px; margin: 8px 0; }
+  .mock h3 { margin-top: 0; font-size: 14px; color: var(--muted); }
+  .yahoo-thumb {
+    display: inline-block; width: 80px; height: 60px;
+    background-image: url('https://example.yahoo.com/ya/api/info/thumbnail?mid=foo123&pid=2.0');
+    background-size: cover;
+    border: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="site"><h1>11. プラットフォーム特化検出</h1></header>
+  <nav class="top"><a href="../index.html">← トップ</a></nav>
+
+  <div class="note">
+    <code>popup.js:3003-3135</code> で実装されている Gmail / Yahoo!メール / Outlook / Salesforce 専用の検出ロジックを
+    再現する DOM 構造です。実際のメールサービスにログインした状態で動作確認するのが理想ですが、
+    最低限ここで構造的に検出できるかは確認できます。
+  </div>
+
+  <h2>Gmail: <code>download_url</code> 属性</h2>
+  <p>Gmail は <code>"mime:filename:url"</code> 形式の <code>download_url</code> 属性で添付情報を埋め込みます。</p>
+  <div class="mock">
+    <h3>Mock attachment row</h3>
+    <span download_url="application/pdf:重要書類.pdf:../files/sample.pdf">
+      📎 重要書類.pdf
+    </span>
+    <br>
+    <span download_url="application/vnd.openxmlformats-officedocument.wordprocessingml.document:契約書.docx:../files/sample.docx">
+      📎 契約書.docx
+    </span>
+    <br>
+    <span download_url="image/jpeg:photo.jpg:../files/sample.jpg">
+      📎 photo.jpg
+    </span>
+  </div>
+
+  <h2>Gmail: 添付ダウンロードリンク（<code>view=att</code>）</h2>
+  <p><code>disp=safe</code> はプレビュー、<code>disp=attd</code> はダウンロードルート。拡張機能は <code>safe</code> を <code>attd</code> に自動変換します。</p>
+  <div class="mock">
+    <a href="https://mail.google.com/mail/u/0/?ui=2&amp;ik=abc&amp;view=att&amp;th=foo&amp;disp=safe&amp;realattid=f_x">
+      請求書 2026-04.pdf
+    </a>
+    <br>
+    <a href="https://mail.google.com/mail/u/0/?ui=2&amp;ik=abc&amp;view=att&amp;th=bar&amp;disp=safe&amp;realattid=f_y">
+      議事録 2026-04.docx
+    </a>
+  </div>
+
+  <h2>Yahoo!メール: <code>li[data-cy="detailAttachmentList"]</code></h2>
+  <p>サムネイルの <code>background-image</code> URL を <code>/refresh?appid=YahooMailFalcon</code> 形式に書き換えて取得します。</p>
+  <ul class="files mock">
+    <li data-cy="detailAttachmentList">
+      <figure title="プレゼン資料.pptx">
+        <span class="yahoo-thumb"></span>
+      </figure>
+    </li>
+    <li data-cy="detailAttachmentList">
+      <figure title="財務報告.xlsx">
+        <span class="yahoo-thumb" style="background-image:url('https://example.yahoo.com/ya/api/info/thumbnail?mid=bar456&pid=2.0')"></span>
+      </figure>
+    </li>
+  </ul>
+
+  <h2>Outlook: <code>[role="option"][aria-label]</code></h2>
+  <p>aria-label からファイル名抽出、img の <code>blob:</code> URL を保持。</p>
+  <div class="mock">
+    <div role="option" aria-label="プロジェクト計画書.docx 添付ファイル">
+      <img src="blob:https://outlook.office365.com/abc-def-ghi-jkl">
+      📎 プロジェクト計画書.docx
+    </div>
+    <div role="option" aria-label="会議メモ.pdf 添付">
+      <img src="blob:https://outlook.office365.com/xyz-uvw-rst-pqo">
+      📎 会議メモ.pdf
+    </div>
+  </div>
+
+  <h2>Salesforce Experience Cloud: <code>.filerow</code></h2>
+  <p><code>data-divid</code> から ContentDocument ID（069 で始まる 18 桁）を抽出して、
+  <code>/sfc/servlet.shepherd/document/download/</code> URL を組み立てます。</p>
+  <ul class="files mock">
+    <li class="filerow" data-divid="badge_069XXXXXXXXXX01">
+      <span class="itemTitle">設計書_v3.pdf</span>
+      <span class="slds-file-type">pdf</span>
+    </li>
+    <li class="filerow" data-divid="badge_069XXXXXXXXXX02">
+      <span class="itemTitle">予算管理_2026.xlsx</span>
+      <span class="slds-file-type">excel</span>
+    </li>
+    <li class="filerow" data-divid="badge_069XXXXXXXXXX03">
+      <span class="itemTitle">プロモーション資料.pptx</span>
+      <span class="slds-file-type">powerpoint</span>
+    </li>
+    <li class="filerow" data-divid="badge_069XXXXXXXXXX04">
+      <span class="itemTitle">契約書ドラフト.docx</span>
+      <span class="slds-file-type">word</span>
+    </li>
+    <li class="filerow" data-divid="badge_069XXXXXXXXXX05">
+      <span class="itemTitle">プロダクト写真.jpg</span>
+      <span class="slds-file-type">image</span>
+    </li>
+  </ul>
+
+  <h2>PDF.js ビューア: <code>window.PDFViewerApplication</code></h2>
+  <p>PDF.js が読み込まれた状態を疑似的に再現します（ビューア本体は表示されません）。</p>
+  <script>
+    window.PDFViewerApplication = {
+      url: window.location.origin + window.location.pathname.replace(/[^/]*$/, '../files/sample-1.pdf'),
+      pdfDocument: { numPages: 1 }
+    };
+    document.title = "サンプル PDF タイトル";
+  </script>
+  <p>このページの <code>document.title</code> = "<span id="t"></span>"</p>
+  <p>検出されるべき URL: <code>../files/sample-1.pdf</code></p>
+  <script>document.getElementById('t').textContent = document.title;</script>
+</div>
+</body>
+</html>

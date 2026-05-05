@@ -1,0 +1,1 @@
+console.log('Grab All Files - sample.js');

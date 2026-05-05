@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>10. 全拡張子 — Grab All Files テスト</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="site"><h1>10. 全対応拡張子の網羅テスト</h1></header>
+  <nav class="top"><a href="../index.html">&larr; トップ</a></nav>
+
+  <div class="note">
+    <code>lib/file-utils.js</code> の <code>knownExtRe</code> に列挙されている全拡張子。
+    各カテゴリのリンクをすべて選択すると、合計 <strong>225 件</strong>
+    のファイルが検出されるはずです（<code>sample.&lt;ext&gt;</code> 命名）。
+  </div>
+  <h2>文書 / Documents (24)</h2>
+  <ul class="files">
+    <li><a href="../files/sample.pdf">sample.pdf</a></li>
+    <li><a href="../files/sample.doc">sample.doc</a></li>
+    <li><a href="../files/sample.docx">sample.docx</a></li>
+    <li><a href="../files/sample.docm">sample.docm</a></li>
+    <li><a href="../files/sample.dotx">sample.dotx</a></li>
+    <li><a href="../files/sample.rtf">sample.rtf</a></li>
+    <li><a href="../files/sample.odt">sample.odt</a></li>
+    <li><a href="../files/sample.pages">sample.pages</a></li>
+    <li><a href="../files/sample.xps">sample.xps</a></li>
+    <li><a href="../files/sample.oxps">sample.oxps</a></li>
+    <li><a href="../files/sample.one">sample.one</a></li>
+    <li><a href="../files/sample.pub">sample.pub</a></li>
+    <li><a href="../files/sample.epub">sample.epub</a></li>
+    <li><a href="../files/sample.epub3">sample.epub3</a></li>
+    <li><a href="../files/sample.mobi">sample.mobi</a></li>
+    <li><a href="../files/sample.kf8">sample.kf8</a></li>
+    <li><a href="../files/sample.kindle">sample.kindle</a></li>
+    <li><a href="../files/sample.azw">sample.azw</a></li>
+    <li><a href="../files/sample.azw3">sample.azw3</a></li>
+    <li><a href="../files/sample.djvu">sample.djvu</a></li>
+    <li><a href="../files/sample.cbr">sample.cbr</a></li>
+    <li><a href="../files/sample.cbz">sample.cbz</a></li>
+    <li><a href="../files/sample.fb2">sample.fb2</a></li>
+    <li><a href="../files/sample.tex">sample.tex</a></li>
+  </ul>
+
+  <h2>文献管理 / Bibliographic (2)</h2>
+  <ul class="files">
+    <li><a href="../files/sample.ris">sample.ris</a></li>
+    <li><a href="../files/sample.bib">sample.bib</a></li>
+  </ul>
+
+  <h2>表計算 / Spreadsheets (9)</h2>
+  <ul class="files">
+    <li><a href="../files/sample.xls">sample.xls</a></li>
+    <li><a href="../files/sample.xlsx">sample.xlsx</a></li>
+    <li><a href="../files/sample.xlsm">sample.xlsm</a></li>
+    <li><a href="../files/sample.xlsb">sample.xlsb</a></li>
+    <li><a href="../files/sample.xltx">sample.xltx</a></li>
+    <li><a href="../files/sample.ods">sample.ods</a></li>
+    <li><a href="../files/sample.numbers">sample.numbers</a></li>
+    <li><a href="../files/sample.csv">sample.csv</a></li>
+    <li><a href="../files/sample.tsv">sample.tsv</a></li>
+  </ul>
+
+  <h2>プレゼンテーション / Presentations (9)</h2>
+  <ul class="files">
+    <li><a href="../files/sample.ppt">sample.ppt</a></li>
+    <li><a href="../files/sample.pptx">sample.pptx</a></li>
+    <li><a href="../files/sample.pptm">sample.pptm</a></li>
+    <li><a href="../files/sample.pps">sample.pps</a></li>
+    <li><a href="../files/sample.ppsx">sample.ppsx</a></li>
+    <li><a href="../files/sample.ppsm">sample.ppsm</a></li>
+    <li><a href="../files/sample.potx">sample.potx</a></li>
+    <li><a href="../files/sample.odp">sample.odp</a></li>
+    <li><a href="../files/sample.key">sample.key</a></li>
+  </ul>
+
+  <h2>画像（ラスター）/ Images (raster) (15)</h2>
+  <ul class="files">
+    <li><a href="../files/sample.png">sample.png</a></li>
+    <li><a href="../files/sample.jpg">sample.jpg</a></li>
+    <li><a href="../files/sample.gif">sample.gif</a></li>
+    <li><a href="../files/sample.bmp">sample.bmp</a></li>
+    <li><a href="../files/sample.tiff">sample.tiff</a></li>
+    <li><a href="../files/sample.tif">sample.tif</a></li>
+    <li><a href="../files/sample.webp">sample.webp</a></li>
+    <li><a href="../files/sample.ico">sample.ico</a></li>
+    <li><a href="../files/sample.heic">sample.heic</a></li>
+    <li><a href="../files/sample.heif">sample.heif</a></li>
+    <li><a href="../files/sample.hif">sample.hif</a></li>
+    <li><a href="../files/sample.avif">sample.avif</a></li>
+    <li><a href="../files/sample.jxl">sample.jxl</a></li>
+    <li><a href="../files/sample.tga">sample.tga</a></li>
+    <li><a href="../files/sample.dds">sample.dds</a></li>
+  </ul>
+
+  <h2>画像（ベクター・特殊形式）/ Images (vector / specialty) (12)</h2>
+  <ul class="files">
+    <li><a href="../files/sample.svg">sample.svg</a></li>
+    <li><a href="../files/sample.svgz">sample.svgz</a></li>
+    <li><a href="../files/sample.psd">sample.psd</a></li>
+    <li><a href="../files/sample.ai">sample.ai</a></li>
+    <li><a href="../files/sample.eps">sample.eps</a></li>
+    <li><a href="../files/sample.emf">sample.emf</a></li>
+    <li><a href="../files/sample.wmf">sample.wmf</a></li>
+    <li><a href="../files/sample.xcf">sample.xcf</a></li>
+    <li><a href="../files/sample.icns">sample.icns</a></li>
+    <li><a href="../files/sample.exr">sample.exr</a></li>
+    <li><a href="../files/sample.hdr">sample.hdr</a></li>
+    <li><a href="../files/sample.raw">sample.raw</a></li>
+  </ul>
+
+  <h2>画像（カメラRAW）/ Images (camera RAW) (8)</h2>
+  <ul class="files">
+    <li><a href="../files/sample.cr2">sample.cr2</a></li>
+    <li><a href="../files/sample.cr3">sample.cr3</a></li>
+    <li><a href="../files/sample.nef">sample.nef</a></li>
+    <li><a href="../files/sample.arw">sample.arw</a></li>
+    <li><a href="../files/sample.orf">sample.orf</a></li>
+    <li><a href="../files/sample.raf">sample.raf</a></li>
+    <li><a href="../files/sample.rw2">sample.rw2</a></li>
+    <li><a href="../files/sample.dng">sample.dng</a></li>
+  </ul>
+
+
+  <h2>字幕 / Subtitles (4)</h2>
+  <ul class="files">
+    <li><a href="../files/sample.srt">sample.srt</a></li>
+    <li><a href="../files/sample.vtt">sample.vtt</a></li>
+    <li><a href="../files/sample.ass">sample.ass</a></li>
+    <li><a href="../files/sample.ssa">sample.ssa</a></li>
+  </ul>
+
+  <h2>圧縮ファイル / Archives (11)</h2>
+  <ul class="files">
+    <li><a href="../files/sample.zip">sample.zip</a></li>
+    <li><a href="../files/sample.rar">sample.rar</a></li>
+    <li><a href="../files/sample.7z">sample.7z</a></li>
+    <li><a href="../files/sample.gz">sample.gz</a></li>
+    <li><a href="../files/sample.tgz">sample.tgz</a></li>
+    <li><a href="../files/sample.tar">sample.tar</a></li>
+    <li><a href="../files/sample.bz2">sample.bz2</a></li>
+    <li><a href="../files/sample.xz">sample.xz</a></li>
+    <li><a href="../files/sample.zst">sample.zst</a></li>
+    <li><a href="../files/sample.lzh">sample.lzh</a></li>
+    <li><a href="../files/sample.cab">sample.cab</a></li>
+  </ul>
+
+  <h2>ディスクイメージ / Disk Images (5)</h2>
+  <ul class="files">
+    <li><a href="../files/sample.iso">sample.iso</a></li>
+    <li><a href="../files/sample.dmg">sample.dmg</a></li>
+    <li><a href="../files/sample.img">sample.img</a></li>
+    <li><a href="../files/sample.vhdx">sample.vhdx</a></li>
+    <li><a href="../files/sample.qcow2">sample.qcow2</a></li>
+  </ul>
+
+  <h2>実行ファイル・パッケージ / Executables / Packages (14)</h2>
+  <ul class="files">
+    <li><a href="../files/sample.exe">sample.exe</a></li>
+    <li><a href="../files/sample.msi">sample.msi</a></li>
+    <li><a href="../files/sample.deb">sample.deb</a></li>
+    <li><a href="../files/sample.rpm">sample.rpm</a></li>
+    <li><a href="../files/sample.apk">sample.apk</a></li>
+    <li><a href="../files/sample.xapk">sample.xapk</a></li>
+    <li><a href="../files/sample.appimage">sample.appimage</a></li>
+    <li><a href="../files/sample.jar">sample.jar</a></li>
+    <li><a href="../files/sample.war">sample.war</a></li>
+    <li><a href="../files/sample.whl">sample.whl</a></li>
+    <li><a href="../files/sample.nupkg">sample.nupkg</a></li>
+    <li><a href="../files/sample.vsix">sample.vsix</a></li>
+    <li><a href="../files/sample.crx">sample.crx</a></li>
+    <li><a href="../files/sample.ipa">sample.ipa</a></li>
+  </ul>
+
+  <h2>フォント / Fonts (5)</h2>
+  <ul class="files">
+    <li><a href="../files/sample.woff">sample.woff</a></li>
+    <li><a href="../files/sample.woff2">sample.woff2</a></li>
+    <li><a href="../files/sample.ttf">sample.ttf</a></li>
+    <li><a href="../files/sample.eot">sample.eot</a></li>
+    <li><a href="../files/sample.otf">sample.otf</a></li>
+  </ul>
+
+  <h2>コード・Web / Code / Web (9)</h2>
+  <ul class="files">
+    <li><a href="../files/sample.css">sample.css</a></li>
+    <li><a href="../files/sample.js">sample.js</a></li>
+    <li><a href="../files/sample.html">sample.html</a></li>
+    <li><a href="../files/sample.htm">sample.htm</a></li>
+    <li><a href="../files/sample.mhtml">sample.mhtml</a></li>
+    <li><a href="../files/sample.mht">sample.mht</a></li>
+    <li><a href="../files/sample.xml">sample.xml</a></li>
+    <li><a href="../files/sample.json">sample.json</a></li>
+    <li><a href="../files/sample.md">sample.md</a></li>
+  </ul>
+
+  <h2>設定ファイル / Config (11)</h2>
+  <ul class="files">
+    <li><a href="../files/sample.yaml">sample.yaml</a></li>
+    <li><a href="../files/sample.yml">sample.yml</a></li>
+    <li><a href="../files/sample.toml">sample.toml</a></li>
+    <li><a href="../files/sample.ini">sample.ini</a></li>
+    <li><a href="../files/sample.cfg">sample.cfg</a></li>
+    <li><a href="../files/sample.conf">sample.conf</a></li>
+    <li><a href="../files/sample.sql">sample.sql</a></li>
+    <li><a href="../files/sample.db">sample.db</a></li>
+    <li><a href="../files/sample.sqlite">sample.sqlite</a></li>
+    <li><a href="../files/sample.bak">sample.bak</a></li>
+    <li><a href="../files/sample.log">sample.log</a></li>
+  </ul>
+
+  <h2>カレンダー・連絡先・GIS / Calendar / Contact / GIS (5)</h2>
+  <ul class="files">
+    <li><a href="../files/sample.ics">sample.ics</a></li>
+    <li><a href="../files/sample.vcf">sample.vcf</a></li>
+    <li><a href="../files/sample.gpx">sample.gpx</a></li>
+    <li><a href="../files/sample.kml">sample.kml</a></li>
+    <li><a href="../files/sample.kmz">sample.kmz</a></li>
+  </ul>
+
+  <h2>データ / Data (10)</h2>
+  <ul class="files">
+    <li><a href="../files/sample.jsonl">sample.jsonl</a></li>
+    <li><a href="../files/sample.ndjson">sample.ndjson</a></li>
+    <li><a href="../files/sample.geojson">sample.geojson</a></li>
+    <li><a href="../files/sample.shp">sample.shp</a></li>
+    <li><a href="../files/sample.shx">sample.shx</a></li>
+    <li><a href="../files/sample.dbf">sample.dbf</a></li>
+    <li><a href="../files/sample.prj">sample.prj</a></li>
+    <li><a href="../files/sample.gpkg">sample.gpkg</a></li>
+    <li><a href="../files/sample.parquet">sample.parquet</a></li>
+    <li><a href="../files/sample.feather">sample.feather</a></li>
+  </ul>
+
+  <h2>科学・医療データ / Scientific (6)</h2>
+  <ul class="files">
+    <li><a href="../files/sample.dcm">sample.dcm</a></li>
+    <li><a href="../files/sample.nii">sample.nii</a></li>
+    <li><a href="../files/sample.h5">sample.h5</a></li>
+    <li><a href="../files/sample.hdf5">sample.hdf5</a></li>
+    <li><a href="../files/sample.nc">sample.nc</a></li>
+    <li><a href="../files/sample.fits">sample.fits</a></li>
+  </ul>
+
+  <h2>証明書・鍵 / Certificates / Keys (5)</h2>
+  <ul class="files">
+    <li><a href="../files/sample.pem">sample.pem</a></li>
+    <li><a href="../files/sample.crt">sample.crt</a></li>
+    <li><a href="../files/sample.cer">sample.cer</a></li>
+    <li><a href="../files/sample.p12">sample.p12</a></li>
+    <li><a href="../files/sample.pfx">sample.pfx</a></li>
+  </ul>
+
+  <h2>CAD・3D / CAD / 3D (13)</h2>
+  <ul class="files">
+    <li><a href="../files/sample.dwg">sample.dwg</a></li>
+    <li><a href="../files/sample.dxf">sample.dxf</a></li>
+    <li><a href="../files/sample.stl">sample.stl</a></li>
+    <li><a href="../files/sample.obj">sample.obj</a></li>
+    <li><a href="../files/sample.fbx">sample.fbx</a></li>
+    <li><a href="../files/sample.glb">sample.glb</a></li>
+    <li><a href="../files/sample.gltf">sample.gltf</a></li>
+    <li><a href="../files/sample.step">sample.step</a></li>
+    <li><a href="../files/sample.stp">sample.stp</a></li>
+    <li><a href="../files/sample.iges">sample.iges</a></li>
+    <li><a href="../files/sample.igs">sample.igs</a></li>
+    <li><a href="../files/sample.skp">sample.skp</a></li>
+    <li><a href="../files/sample.blend">sample.blend</a></li>
+  </ul>
+
+  <h2>プレーンテキスト / Plain Text (1)</h2>
+  <ul class="files">
+    <li><a href="../files/sample.txt">sample.txt</a></li>
+  </ul>
+
+  <p style="margin-top:32px;color:var(--muted);font-size:13px;">
+    上記は <code>files/</code> 配下に存在する <code>sample.&lt;ext&gt;</code> ファイル (225 件) のみを表示しています。
+    別名のファイル（<code>mystery.bin</code>, <code>archive.dat</code>, <code>no-extension</code>）は
+    <a href="14-magic-bytes.html">14. マジックバイト</a> ページで扱います。
+  </p>
+</div>
+</body>
+</html>

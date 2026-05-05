@@ -1,0 +1,10 @@
+{
+  "name": "Grab All Files test fixture",
+  "version": "1.0.0",
+  "description": "サンプル JSON データ",
+  "items": [
+    { "id": 1, "label": "alpha" },
+    { "id": 2, "label": "beta" },
+    { "id": 3, "label": "gamma" }
+  ]
+}

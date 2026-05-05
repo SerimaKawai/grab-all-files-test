@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>04. data-* 属性 — Grab All Files テスト</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="site"><h1>04. data-* 属性経由のファイル指定（25種）</h1></header>
+  <nav class="top"><a href="../index.html">← トップ</a></nav>
+
+  <div class="note">
+    拡張機能 <code>popup.js:2809-2821</code> で対応している全 25 個の <code>data-*</code> 属性を網羅。
+    属性名に <code>pdf</code>, <code>image</code>, <code>thumb</code>, <code>background</code>, <code>bg</code>,
+    <code>zoom</code>, <code>highres</code>, <code>hires</code>, <code>large</code>, <code>original</code>, <code>full</code>
+    が含まれているとタイプヒントが付与されます。
+  </div>
+
+  <h2>汎用URL系（4種）</h2>
+  <ul class="files">
+    <li><div class="card" data-href="../files/sample.pdf">data-href</div></li>
+    <li><div class="card" data-url="../files/sample.docx">data-url</div></li>
+    <li><div class="card" data-file-url="../files/sample.xlsx">data-file-url</div></li>
+    <li><div class="card" data-file="../files/sample.pptx">data-file</div></li>
+  </ul>
+
+  <h2>遅延読み込み画像系（5種）</h2>
+  <ul class="files">
+    <li><div class="card" data-src="../files/sample.png">data-src</div></li>
+    <li><div class="card" data-lazy-src="../files/sample.jpg">data-lazy-src</div></li>
+    <li><div class="card" data-original="../files/sample.gif">data-original</div></li>
+    <li><div class="card" data-full="../files/sample.webp">data-full</div></li>
+    <li><div class="card" data-full-src="../files/sample.svg">data-full-src</div></li>
+  </ul>
+
+  <h2>高解像度画像系（4種）</h2>
+  <ul class="files">
+    <li><div class="card" data-large="../files/sample.png">data-large</div></li>
+    <li><div class="card" data-zoom-image="../files/sample.jpg">data-zoom-image</div></li>
+    <li><div class="card" data-highres="../files/sample.tiff">data-highres</div></li>
+    <li><div class="card" data-hires="../files/sample.heic">data-hires</div></li>
+  </ul>
+
+  <h2>背景画像系（3種）</h2>
+  <ul class="files">
+    <li><div class="card" data-bg="../files/sample.png">data-bg</div></li>
+    <li><div class="card" data-background="../files/sample.jpg">data-background</div></li>
+    <li><div class="card" data-background-image="../files/sample.webp">data-background-image</div></li>
+  </ul>
+
+  <h2>サムネイル系（2種）</h2>
+  <ul class="files">
+    <li><div class="card" data-thumb="../files/sample.png">data-thumb</div></li>
+    <li><div class="card" data-thumbnail="../files/sample.jpg">data-thumbnail</div></li>
+  </ul>
+
+  <h2>画像系（2種）</h2>
+  <ul class="files">
+    <li><div class="card" data-image="../files/sample.png">data-image</div></li>
+    <li><div class="card" data-image-url="../files/sample.jpg">data-image-url</div></li>
+  </ul>
+
+  <h2>ダウンロード/PDF系（5種）</h2>
+  <ul class="files">
+    <li><div class="card" data-download-url="../files/sample.zip">data-download-url</div></li>
+    <li><div class="card" data-pdf="../files/sample-1.pdf">data-pdf</div></li>
+    <li><div class="card" data-pdf-url="../files/sample-2.pdf">data-pdf-url</div></li>
+    <li><div class="card" data-document-url="../files/sample.docx">data-document-url</div></li>
+    <li><div class="card" data-viewer-url="../files/sample.pptx">data-viewer-url</div></li>
+  </ul>
+
+  <h2>Canvas data 属性</h2>
+  <p>PDF.js 風のページ別 canvas（<code>data-page</code>＋<code>data-src</code>）:</p>
+  <p>
+    <canvas data-page="1" data-src="../files/sample.png" width="80" height="100" style="border:1px solid #888"></canvas>
+    <canvas data-page="2" data-src="../files/sample.jpg" width="80" height="100" style="border:1px solid #888"></canvas>
+    <canvas data-page="3" data-src="../files/sample.webp" width="80" height="100" style="border:1px solid #888"></canvas>
+  </p>
+</div>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>14. マジックバイト検出 — Grab All Files テスト</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="site"><h1>14. マジックバイト（ファイル先頭バイト）からの種類判定</h1></header>
+  <nav class="top"><a href="../index.html">← トップ</a></nav>
+
+  <div class="note">
+    <code>lib/file-utils.js</code> の <code>extFromMagic()</code> はファイルの先頭数バイトから種類を推定します。
+    URL の拡張子だけでは判定できないファイル（拡張子なし、不正な拡張子）でも、
+    ダウンロード後の <code>Content-Type</code> や header bytes から正しく分類されるかを確認してください。
+    結果一覧の「種類」列にツールチップ「<code>ファイル先頭バイトから判定</code>」が出れば成功です。
+  </div>
+
+  <h2>拡張子と中身がミスマッチなファイル</h2>
+  <ul class="files">
+    <li><a href="../files/mystery.bin">mystery.bin</a> — 中身は PDF (<code>%PDF-1.4</code>)</li>
+    <li><a href="../files/archive.dat">archive.dat</a> — 中身は ZIP (<code>PK\x03\x04</code>)</li>
+    <li><a href="../files/no-extension">no-extension</a> — 拡張子なしの PNG</li>
+  </ul>
+
+  <h2>マジックバイトリスト（拡張機能が認識）</h2>
+  <p>これらは <a href="10-all-extensions.html">10. 全拡張子</a> ページに正しい拡張子で並んでいるので、参考までに対応表のみ:</p>
+  <ul class="files">
+    <li><code>%PDF</code> (0x25 50 44 46) → pdf</li>
+    <li><code>PK..</code> (0x50 4B 03/05/07) → zip / docx / xlsx / pptx</li>
+    <li><code>.PNG</code> (0x89 50 4E 47) → png</li>
+    <li><code>0xFF D8 FF</code> → jpg</li>
+    <li><code>GIF8</code> (0x47 49 46 38) → gif</li>
+    <li><code>RIFF...WEBP</code> → webp</li>
+    <li><code>RIFF...WAVE</code> → wav</li>
+    <li><code>RIFF...AVI</code> → avi</li>
+    <li><code>ftyp</code> (offset 4) → mp4</li>
+    <li><code>OggS</code> (0x4F 67 67 53) → ogg</li>
+    <li><code>fLaC</code> (0x66 4C 61 43) → flac</li>
+    <li><code>ID3</code> (0x49 44 33) / 0xFF E0 → mp3</li>
+    <li><code>Rar!</code> (0x52 61 72 21) → rar</li>
+    <li><code>7z\xBC\xAF</code> (0x37 7A BC AF) → 7z</li>
+    <li><code>0x1F 8B</code> → gz</li>
+    <li><code>BM</code> (0x42 4D) → bmp</li>
+    <li><code>BZh</code> (0x42 5A 68) → bz2</li>
+    <li><code>0xFD 37 7A 58 5A 00</code> → xz</li>
+    <li><code>MZ</code> (0x4D 5A) → exe</li>
+    <li><code>0x30 26 B2 75</code> (ASF header) → wmv / asf</li>
+  </ul>
+
+  <h2>確認ポイント</h2>
+  <ol>
+    <li><a href="../files/mystery.bin">mystery.bin</a> をスキャン結果の「種類」列でホバー → 「ファイル先頭バイトから判定」ツールチップが出る</li>
+    <li>ダウンロード後、ファイルが PDF として正しく開けることを確認</li>
+    <li><a href="../files/archive.dat">archive.dat</a> も同様。中身は ZIP として展開できる</li>
+  </ol>
+</div>
+</body>
+</html>

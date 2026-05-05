@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Grab All Files テストサイト</title>
+<link rel="stylesheet" href="assets/style.css">
+<meta name="description" content="ファイル一括ダウンロード拡張機能の検出パターン確認用テストサイト">
+</head>
+<body>
+<div class="wrap">
+  <header class="site">
+    <h1>Grab All Files テストサイト</h1>
+    <p>Google Chrome™ / Microsoft Edge™ 拡張機能「ファイル一括ダウンロード（Grab All Files）」の<strong>全検出パターン</strong>確認用</p>
+  </header>
+
+  <div class="note">
+    <code>lib/file-utils.js</code> の <code>knownExtRe</code> に列挙された <strong>225 拡張子</strong>と、
+    <code>popup.js</code> / <code>page-interceptor.js</code> に実装された <strong>40 以上の検出手法</strong>を網羅したテストフィクスチャです。
+    各ページを開いて拡張機能のポップアップから <strong>Scan</strong> を実行してください。
+  </div>
+
+  <h2>① HTML 要素 / 属性検出</h2>
+  <div class="cards">
+    <a href="pages/01-basic.html">
+      <strong>01. 基本リンク</strong>
+      <span><code>&lt;a href&gt;</code> + <code>download</code> / <code>type</code> 属性</span>
+    </a>
+    <a href="pages/02-images.html">
+      <strong>02. 画像（lazy / srcset / picture / CSS背景）</strong>
+      <span>遅延読み込み・レスポンシブ画像・CSS background</span>
+    </a>
+    <a href="pages/03-embeds.html">
+      <strong>03. 埋め込み</strong>
+      <span>iframe / embed / object</span>
+    </a>
+    <a href="pages/04-data-attrs.html">
+      <strong>04. data-* 属性（25種）</strong>
+      <span>data-href, data-pdf-url, data-zoom-image など全網羅</span>
+    </a>
+  </div>
+
+  <h2>② メタ・スクリプト・フォーム</h2>
+  <div class="cards">
+    <a href="pages/05-meta-and-script.html">
+      <strong>05. メタタグ・インラインスクリプト</strong>
+      <span>OGP / Twitter / citation_pdf_url / pdfUrl 等 17 キー / JSON-LD</span>
+    </a>
+    <a href="pages/06-forms-and-hidden.html">
+      <strong>06. POSTフォーム / hidden input</strong>
+      <span>「ダウンロード」ボタン (JP/EN/CN) / ポータル風 hidden / 除外条件</span>
+    </a>
+    <a href="pages/07-blob-fetch.html">
+      <strong>07. blob: / fetch / XHR</strong>
+      <span>ネットワーク監視（page-interceptor.js） / 遅延 DOM 注入</span>
+    </a>
+  </div>
+
+  <h2>③ URL推定パターン</h2>
+  <div class="cards">
+    <a href="pages/08-no-extension.html">
+      <strong>08. 拡張子なしURL（クラウド・LMS・CMS）</strong>
+      <span>S3 / GCS / Moodle / Canvas / Liferay / 文書ホスティング等</span>
+    </a>
+    <a href="pages/12-pdfjs-viewer.html">
+      <strong>12. PDF.js ビューア・PDF閲覧URL</strong>
+      <span>/_pdf/, /viewer/pdf, response-content-type, e-manual</span>
+    </a>
+  </div>
+
+  <h2>④ 高度な検出</h2>
+  <div class="cards">
+    <a href="pages/11-platform-mocks.html">
+      <strong>11. プラットフォーム特化（Gmail / Yahoo / Outlook / Salesforce）</strong>
+      <span>download_url 属性 / disp=safe→attd / aria-label / 069 ContentDocument</span>
+    </a>
+    <a href="pages/14-magic-bytes.html">
+      <strong>14. マジックバイト判定</strong>
+      <span>拡張子と中身がミスマッチ → 先頭バイトから種類判定</span>
+    </a>
+    <a href="pages/15-css-scanning.html">
+      <strong>15. CSS スキャン</strong>
+      <span>backgroundImage / image-set / border-image / @font-face / cursor</span>
+    </a>
+    <a href="pages/09-misdetection-traps.html">
+      <strong>09. 誤検出トラップ</strong>
+      <span>SourceForge / naturalearthdata 等、除外されるべきパターン</span>
+    </a>
+  </div>
+
+  <h2>⑤ 全拡張子・クロール深度</h2>
+  <div class="cards">
+    <a href="pages/10-all-extensions.html">
+      <strong>10. 全 225 拡張子の網羅リンク</strong>
+      <span>knownExtRe に列挙されたすべての対応拡張子</span>
+    </a>
+    <a href="pages/deep/level-1.html">
+      <strong>16. Deep Scan チェーン (level-1 → 3)</strong>
+      <span>クロール深度ごとに到達できるファイル数が増加</span>
+    </a>
+  </div>
+
+  <footer>
+    Grab All Files テストフィクスチャ。検出ロジックは
+    <code>lib/file-utils.js</code> / <code>popup.js</code> / <code>page-interceptor.js</code>、
+    機能仕様は <code>docs/sales-feature-document-ja.md</code> を参照。
+  </footer>
+</div>
+</body>
+</html>

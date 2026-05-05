@@ -1,0 +1,4 @@
+# Internal QA fixture for the Grab All Files extension.
+# Not intended for public discovery — keep out of all search indexes.
+User-agent: *
+Disallow: /

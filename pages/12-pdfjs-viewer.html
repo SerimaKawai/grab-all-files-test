@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>12. PDF.js ビューア検出 — Grab All Files テスト</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="site"><h1>12. PDF.js ビューア・PDF閲覧URL検出</h1></header>
+  <nav class="top"><a href="../index.html">← トップ</a></nav>
+
+  <div class="note">
+    <code>likelyPdfUrlRe</code> および <code>dlPatternRe</code> で検出する PDF ビューア URL パターンを網羅。
+    実際の PDF.js ビューアが起動していなくても、URL の「形」を拾って実体ファイルとして候補化します。
+    リンク先は外部ドメインのため、このテストサイト内では実体ヒットしませんが、検出器のリグレッション確認に使えます。
+  </div>
+
+  <h2>PDF.js のビューア URL パターン</h2>
+  <ul class="files">
+    <li><a href="https://example.com/pdfjs/web/viewer.html?file=https%3A%2F%2Fexample.com%2Fdocs%2Fsample.pdf">/pdfjs/web/viewer.html?file=...</a></li>
+    <li><a href="https://example.com/_pdf/sample.pdf">/_pdf/sample.pdf</a></li>
+    <li><a href="https://example.com/_pdf/?id=42">/_pdf/?id=...</a></li>
+    <li><a href="https://example.com/viewer/pdf?file=document.pdf">/viewer/pdf</a></li>
+    <li><a href="https://example.com/view/pdf/abc-123">/view/pdf/&lt;id&gt;</a></li>
+    <li><a href="https://example.com/preview/pdf/xyz-456">/preview/pdf/&lt;id&gt;</a></li>
+    <li><a href="https://example.com/pdf/viewer?src=document.pdf">/pdf/viewer</a></li>
+    <li><a href="https://example.com/pdf/view/abc-123">/pdf/view/&lt;id&gt;</a></li>
+    <li><a href="https://example.com/pdf/preview/abc-123">/pdf/preview/&lt;id&gt;</a></li>
+    <li><a href="https://example.com/pdf/stream/abc-123">/pdf/stream/&lt;id&gt;</a></li>
+    <li><a href="https://example.com/pdf/content/abc-123">/pdf/content/&lt;id&gt;</a></li>
+  </ul>
+
+  <h2><code>response-content-type=application/pdf</code> 系</h2>
+  <ul class="files">
+    <li><a href="https://example.com/storage/file?response-content-type=application%2Fpdf">response-content-type</a></li>
+    <li><a href="https://example.com/storage/file?content_type=application%2Fpdf">content_type</a></li>
+    <li><a href="https://example.com/storage/file?mime=application%2Fpdf">mime</a></li>
+    <li><a href="https://example.com/api/file?format=pdf">?format=pdf</a></li>
+    <li><a href="https://example.com/api/file?fmt=pdf">?fmt=pdf</a></li>
+  </ul>
+
+  <h2>業務システム / e-manual 風</h2>
+  <ul class="files">
+    <li><a href="https://example.com/manuals?manualId=12345">?manualId=&lt;n&gt;</a></li>
+    <li><a href="https://example.com/docs?documentId=67890">?documentId=&lt;n&gt;</a></li>
+    <li><a href="https://example.com/docs?docId=foo">?docId=&lt;...&gt;</a></li>
+    <li><a href="https://example.com/files?pdfId=bar">?pdfId=&lt;...&gt;</a></li>
+    <li><a href="https://example.com/portal/manual_browse?id=42">/manual_browse</a></li>
+    <li><a href="https://example.com/portal/document_browse?id=42">/document_browse</a></li>
+    <li><a href="https://example.com/portal/document_view?id=42">/document_view</a></li>
+    <li><a href="https://example.com/portal/pdf_view?id=42">/pdf_view</a></li>
+    <li><a href="https://liferay.example.com/?p_p_id=manual&amp;p_p_lifecycle=2">p_p_id=manual + lifecycle=2</a></li>
+    <li><a href="https://liferay.example.com/?p_p_id=document&amp;_mvcRenderCommandName=document_browse">_mvcRenderCommandName=document_browse</a></li>
+    <li><a href="https://liferay.example.com/?p_p_id=fileentry&amp;p_p_lifecycle=2">p_p_id=fileentry</a></li>
+    <li><a href="https://liferay.example.com/?p_p_id=doclib&amp;p_p_lifecycle=2">p_p_id=doclib</a></li>
+  </ul>
+
+  <h2>iframe で PDF.js を起動した想定</h2>
+  <iframe src="../files/sample.pdf#zoom=auto" width="100%" height="240" title="local pdf"></iframe>
+  <iframe src="https://example.com/pdfjs/web/viewer.html?file=https%3A%2F%2Fexample.com%2Fpaper.pdf" width="100%" height="120" title="external pdfjs"></iframe>
+
+  <h2>論文ホスティング・引用ルート</h2>
+  <ul class="files">
+    <li><a href="https://www.researchgate.net/publication/12345/sample">researchgate.net/publication/&lt;id&gt;</a></li>
+    <li><a href="https://www.academia.edu/12345/sample-paper">academia.edu/&lt;n&gt;/...</a></li>
+    <li><a href="https://issuu.com/sample/docs/sample-publication">issuu.com/&lt;user&gt;/docs/&lt;slug&gt;</a></li>
+    <li><a href="https://www.scribd.com/document/12345/sample">scribd.com/document/&lt;n&gt;/...</a></li>
+    <li><a href="https://www.docusign.net/Signing/foo">docusign.net/Signing/...</a></li>
+    <li><a href="https://example.com/highwire/citation/123/ris">/highwire/citation/&lt;n&gt;/ris</a></li>
+    <li><a href="https://example.com/highwire/citation/123/bibtex">/highwire/citation/&lt;n&gt;/bibtex</a></li>
+    <li><a href="https://example.com/citation/ris/abc">/citation/ris</a></li>
+  </ul>
+</div>
+</body>
+</html>

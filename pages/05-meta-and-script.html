@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>05. メタタグ・インラインスクリプト — Grab All Files テスト</title>
+<link rel="stylesheet" href="../assets/style.css">
+
+<!-- ===== 全メタタグパターン (popup.js:2954) ===== -->
+<!-- OGP -->
+<meta property="og:url" content="../files/sample.html">
+<meta property="og:image" content="../files/sample.png">
+<meta property="og:image:url" content="../files/sample.jpg">
+<meta property="og:image:secure_url" content="../files/sample.webp">
+
+<!-- Twitter Card -->
+<meta name="twitter:image" content="../files/sample.png">
+<meta name="twitter:image:src" content="../files/sample.jpg">
+<meta property="twitter:image" content="../files/sample.gif">
+<meta property="twitter:image:src" content="../files/sample.webp">
+
+<!-- 学術論文 (citation_*) -->
+<meta name="citation_pdf_url" content="../files/sample-1.pdf">
+<meta name="citation_title" content="サンプル論文タイトル">
+<meta name="citation_author" content="Sample Author">
+</head>
+<body>
+<div class="wrap">
+  <header class="site"><h1>05. メタタグ・インラインスクリプト</h1></header>
+  <nav class="top"><a href="../index.html">← トップ</a></nav>
+
+  <div class="note">
+    head の OGP / Twitter Card / citation_pdf_url（合計 14 種類）と、ページ末尾のインラインスクリプトに埋め込まれた
+    PDF / 画像の URL（17 種のキー）を検出します。属性名に <code>pdf</code>, <code>image</code>,
+  </div>
+
+  <h2>定義済みメタタグ一覧</h2>
+  <ul class="files">
+    <li><code>og:url</code> → sample.html</li>
+    <li><code>og:image</code> / <code>og:image:url</code> / <code>og:image:secure_url</code></li>
+    <li><code>citation_pdf_url</code></li>
+  </ul>
+
+  <h2>インラインスクリプト: PDF URL キー（8種）</h2>
+  <p>正規表現 <code>\b(pdfUrl|pdf_url|pdfSrc|pdf_src|pdfFile|pdf_file|pdfPath|pdf_path)\b</code> でマッチ:</p>
+  <script>
+    window.__pdfKeys = {
+      pdfUrl:   "../files/sample.pdf",
+      pdf_url:  "../files/sample-1.pdf",
+      pdfSrc:   "../files/sample-2.pdf",
+      pdf_src:  "../files/sample.pdf",
+      pdfFile:  "../files/sample-1.pdf",
+      pdf_file: "../files/sample-2.pdf",
+      pdfPath:  "../files/sample.pdf",
+      pdf_path: "../files/sample-1.pdf"
+    };
+  </script>
+
+  <h2>インラインスクリプト: 画像URL キー（9種）</h2>
+  <p>正規表現 <code>\b(imageUrl|image_url|imageSrc|image_src|imagePath|image_path|photoUrl|photo_url|thumbnailUrl|thumbnail_url|backgroundImage)\b</code>:</p>
+  <script>
+    window.__imageKeys = {
+      imageUrl:        "../files/sample.png",
+      image_url:       "../files/sample.jpg",
+      imageSrc:        "../files/sample.gif",
+      image_src:       "../files/sample.webp",
+      imagePath:       "../files/sample.svg",
+      image_path:      "../files/sample.tiff",
+      photoUrl:        "../files/sample.heic",
+      photo_url:       "../files/sample.avif",
+      thumbnailUrl:    "../files/sample.png",
+      thumbnail_url:   "../files/sample.jpg",
+      backgroundImage: "../files/sample.webp"
+    };
+  </script>
+
+  <h2>PDF.js ビューアURL パターン（インラインスクリプト中）</h2>
+  <p>正規表現 <code>/(viewer|view|preview)/pdf|/pdf/(viewer|view|preview|stream|content)|/pdfjs/web/viewer\.html</code>:</p>
+  <script>
+    // これらは外部ドメイン上の URL なのでこのテストサイトでは実体に当たりませんが、
+    // 拡張機能の検出器がパターンを拾えるかを確認します。
+    var viewerRoutes = [
+      "https://example.com/viewer/pdf?file=doc1.pdf",
+      "https://example.com/view/pdf?id=42",
+      "https://example.com/preview/pdf/abc123",
+      "https://example.com/pdf/viewer?src=doc.pdf",
+      "https://example.com/pdf/view/123",
+      "https://example.com/pdf/preview/123",
+      "https://example.com/pdf/stream/123",
+      "https://example.com/pdf/content/123",
+      "https://example.com/pdfjs/web/viewer.html?file=sample.pdf"
+    ];
+  </script>
+
+  <h2>添付配列・複数URLリテラル</h2>
+  <script>
+    window.__cmsConfig = {
+      attachments: [
+        "../files/sample.docx",
+        "../files/sample.xlsx",
+        "../files/sample.pptx",
+        "../files/sample.zip",
+        "../files/sample.rar"
+      ]
+    };
+  </script>
+
+  <h2>JSON-LD (schema.org)</h2>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "サンプル記事",
+    "image": "../files/sample.jpg",
+    "associatedMedia": {
+      "@type": "DocumentObject",
+      "contentUrl": "../files/sample-2.pdf"
+    }
+  }
+  </script>
+</div>
+</body>
+</html>

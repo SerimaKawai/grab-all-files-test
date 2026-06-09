@@ -4,37 +4,40 @@
 <meta charset="utf-8">
 <meta name="robots" content="noindex,nofollow">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>18-C. icon-pdf 拡張子なしリンク経由の子ページ — Grab All Files テスト</title>
+<title>18-C. icon-pdf 拡張子なしリンクの解決先 — Grab All Files テスト</title>
 <link rel="stylesheet" href="../../../assets/style.css">
 </head>
 <body>
 <div class="wrap">
-  <header class="site"><h1>18-C. <code>icon-pdf</code> 拡張子なしリンク経由で辿られる子ページ</h1></header>
+  <header class="site"><h1>18-C. <code>icon-pdf</code> 拡張子なしリンクが解決される先（<code>crawl/question/</code>）</h1></header>
   <nav class="top"><a href="../../../index.html">← トップ</a> ｜ <a href="../../18-crawl-nav.html">← 18. ハブへ戻る</a></nav>
 
   <div class="note">
-    このページは、ハブ（<code>18-crawl-nav.html</code>）の
-    <code>&lt;a class="icon-pdf" href="crawl/question/"&gt;問題PDF&lt;/a&gt;</code> から到達される。<br>
-    href は拡張子のない <code>crawl/question/</code>（末尾スラッシュ）だが、
-    <code>fetchAndParse</code> の <code>detectIconTypeHint</code> がアイコンクラス
-    <code>icon-pdf</code> を読み、PDF を持つ可能性のあるルートとして辿る
-    （toshin new_kakomon_db の <code>icon-pdf</code> 拡張子なしリンクと同型）。<br>
-    GitHub Pages は <code>crawl/question/</code> を自動的にこの <code>index.html</code> へ解決する。
+    <strong>このページは「クロールで辿られる子ページ」ではない。</strong>
+    ハブ（<code>18-crawl-nav.html</code>）の
+    <code>&lt;a class="icon-pdf" href="crawl/question/"&gt;問題PDF&lt;/a&gt;</code> は、
+    <code>fetchAndParse</code> のアンカーループ内で <code>detectIconTypeHint</code> が
+    アイコンクラス <code>icon-pdf</code> を読み、その URL <code>crawl/question/</code>
+    <strong>自体を PDF 候補（typeHint=pdf）として深度 0 で <code>files</code> に追加</strong>する
+    （toshin new_kakomon_db と同型）。<br>
+    つまり拡張機能は <code>crawl/question/</code> を「PDF へのリンク」とみなして
+    そのままダウンロード対象にするだけで、<strong>HTML ページとしてクロール（解析）はしない</strong>。
+    このため下に置いた <code>../../../files/sample-2.pdf</code> は<strong>個別には検出されない</strong>。
   </div>
 
-  <h2>このページにあるファイル（深度 1 で検出される）</h2>
-  <ul class="files">
-    <li><a href="../../../files/sample-2.pdf">sample-2.pdf（icon-pdf ターゲットの固有ファイル）</a></li>
-  </ul>
-
-  <h2>期待される検出</h2>
   <div class="note">
-    深度 1 のクロールで <code>../../../files/sample-2.pdf</code> が検出される。
-    深度 0（ハブのみ）ではこのページに到達しないため検出されない。<br>
-    ポイントは、ハブの <code>icon-pdf</code> 拡張子なしリンクが「ナビ」ではなく
-    「PDF を持つページ」として辿られること（パスは深さ 3 階層なので
-    ファイル参照は <code>../../../files/</code>）。
+    <strong>静的ホストの注意:</strong> 本テストサイトではこのディレクトリ
+    <code>crawl/question/</code> は <code>index.html</code>（このページ）に解決される。
+    したがって <code>crawl/question/</code> をダウンロードしても実体は PDF バイト列ではなく
+    この HTML が返るため、<strong>ダウンロードの正当性は保証されない</strong>。
+    確認したいのは「拡張子なし URL が <code>icon-pdf</code> の type ヒントで
+    <strong>深度 0 の PDF として検出されること</strong>」であり、そこが本テストの主眼。
   </div>
+
+  <h2>（参考）この HTML が持つリンク — 個別には検出されない</h2>
+  <ul class="files">
+    <li><a href="../../../files/sample-2.pdf">sample-2.pdf（このページはクロールされないので検出対象外）</a></li>
+  </ul>
 </div>
 </body>
 </html>

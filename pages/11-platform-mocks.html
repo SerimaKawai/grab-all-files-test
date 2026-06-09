@@ -200,10 +200,15 @@
       実 Community では <code>&lt;origin&gt;/ass/sfc/servlet.shepherd/document/download/069IT00000LINK01</code>、
       テスト閲覧時は接頭辞なし）。
     </p>
-    <p style="margin:4px 0;"><strong>検出されない:</strong>
-      <code>renditionDownload?…&versionId=068…</code> のサムネイル src 自体は
-      （069 が取れる行では）ダウンロード対象にならず、ID 回収にのみ使われます。
-      <code>data-divid</code>・069 リンク・068 サムネイルのいずれも無い <code>.filerow</code> は検出されません。</p>
+    <p style="margin:4px 0;"><strong>Salesforce 合成ロジックの対象外:</strong>
+      <code>renditionDownload?…&versionId=068…</code> のサムネイル src 自体は、
+      Salesforce 専用の合成では（069 が取れる行では）ダウンロード対象にされず、ID 回収にのみ使われます。
+      <code>data-divid</code>・069 リンク・068 サムネイルのいずれも無い <code>.filerow</code> は合成されません。<br>
+      <strong>ただし注意（別経路）:</strong> これらサムネイル src は<strong>汎用の <code>&lt;img&gt;</code> ハーベスト</strong>に
+      よって画像候補（typeHint=jpg）として別途拾われ得ます（<code>nonFileUrlRe</code> は
+      <code>sfc/servlet.shepherd/</code> を含む URL を除外しないため）。実ブラウザではサムネイルが
+      40×40 と小さくない限り画像として一覧に出るので、「サムネイル URL が一切結果に出ない」わけではありません。
+      画像グループを OFF にすれば消えます。</p>
   </div>
 
   <h2>PDF.js ビューア: <code>window.PDFViewerApplication</code></h2>

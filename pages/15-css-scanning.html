@@ -7,7 +7,8 @@
 <title>15. CSS スキャン — Grab All Files テスト</title>
 <link rel="stylesheet" href="../assets/style.css">
 <style>
-  /* ===== ここで参照される全 URL が検出対象 ===== */
+  /* ===== 検出対象は backgroundImage / borderImageSource / listStyleImage のみ。
+     @font-face(src) / cursor / ::before content の URL は getComputedStyle では読めず未検出（下記参照） ===== */
 
   /* backgroundImage プロパティ */
   .demo-bg-1 { background-image: url('../files/sample.png'); }
@@ -40,7 +41,7 @@
   /* listStyleImage */
   ul.demo-list { list-style-image: url('../files/sample.gif'); }
 
-  /* @font-face: 検出対象 */
+  /* @font-face: 検出対象外（getComputedStyle は font-face の src を返さない） */
   @font-face {
     font-family: 'SampleFont';
     src: url('../files/sample.woff2') format('woff2'),
@@ -104,8 +105,12 @@
   <div class="note">
     拡張機能 <code>popup.js:5790-5812</code> は、要素の <code>style</code> 属性と
     <code>getComputedStyle()</code> から <code>backgroundImage</code> /
-    <code>borderImageSource</code> / <code>listStyleImage</code> を読み出します。
-    パフォーマンス上、最初の 2000 要素までが対象です。
+    <code>borderImageSource</code> / <code>listStyleImage</code> の 3 プロパティ<strong>だけ</strong>を読み出します。
+    パフォーマンス上、最初の 2000 要素までが対象です。<br>
+    <strong>検出されないもの（仕様）:</strong> <code>@font-face</code> の <code>src</code>、
+    <code>cursor: url()</code>、<code>::before/::after</code> の <code>content: url()</code> は
+    <code>getComputedStyle()</code> から URL を取り出せないため<strong>読み取りません</strong>
+    （<code>cssRules</code> の走査は実装されていません）。下の該当セクションは「検出されない」確認用です。
   </div>
 
   <h2><code>style="..."</code> インライン</h2>
@@ -138,15 +143,23 @@
     <li>項目3</li>
   </ul>
 
-  <h2><code>@font-face src</code></h2>
-  <p>このページの head スタイルで <code>sample.woff2 / sample.woff / sample.ttf</code> を参照しています。</p>
+  <h2><code>@font-face src</code> — <em>検出されない</em></h2>
+  <p>このページの head スタイルで <code>sample.woff2 / sample.woff / sample.ttf</code> を
+     <code>@font-face</code> の <code>src</code> で参照していますが、
+     <code>getComputedStyle()</code> は <code>@font-face</code> の <code>src</code> を返さず、
+     <code>cssRules</code> 走査も無いため、これらフォントは <strong>検出されません</strong>。
+     （フォントを検出させたい場合は <code>&lt;a href&gt;</code> など別経路が必要です。）</p>
 
-  <h2><code>cursor</code> プロパティ / <code>::before content</code></h2>
+  <h2><code>cursor</code> / <code>::before content</code> — <em>検出されない</em></h2>
   <p>
     <span class="demo-cursor">この上にカーソル → sample.png</span>
     &nbsp;&nbsp;
     <span class="demo-content">::before に content: url(../files/sample.png)</span>
   </p>
+  <p class="note"><code>cursor: url()</code> と <code>::before/::after</code> の <code>content: url()</code> は
+     読み取り対象外なので、これら経由の URL は<strong>検出されません</strong>。
+     なお <code>sample.png</code> 自体は上の <code>background-image</code> 系で別途検出されます
+     （この URL が「検出される」のは ::before content 経由ではない点に注意）。</p>
 
   <h2>外部スタイルシート</h2>
   <p><a href="../files/sample.css">sample.css</a> 自体もファイルとして検出されます（拡張子 <code>.css</code>）。</p>

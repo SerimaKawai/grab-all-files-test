@@ -23,8 +23,10 @@
     <strong>poster（画像）と <code>&lt;track&gt;</code>（字幕）だけ</strong>を収集し、
     <code>&lt;video src&gt;</code> や <code>&lt;source src&gt;</code> 自体、
     <code>&lt;audio&gt;</code> の音声本体は<strong>収集しません</strong>。
-    ストリーミング（HLS <code>.m3u8</code> / DASH <code>.mpd</code> / <code>.ts</code> / <code>.m4s</code>）と
+    ストリーミング（HLS <code>.m3u8</code> / DASH <code>.mpd</code> / <code>.m4s</code> / <code>.m2ts</code> / <code>.mts</code>）と
     全音声、blob/傍受メディアは <code>avExtRe</code>（<code>lib/file-utils.js</code> / <code>content.js</code> ネットワーク経路ガード / <code>page-interceptor.js</code>）で恒久ブロックされます。
+    <br>
+    ※ <code>.ts</code>（MPEG-TS セグメント）は<strong>否定テストに使えません</strong>。<code>ts</code> は TypeScript と拡張子が衝突し、<code>web</code> スキャングループ（デフォルト ON）の対象なので直リンクは検出されます。ストリーミングの否定確認には <code>avExtRe</code> が確実にブロックする <code>.m4s</code> を使います。
     <br>
     <strong>期待検出ユニーク URL: 16 件</strong>（同一ファイルを複数経路で参照しているので重複排除後の件数）。
   </div>
@@ -133,7 +135,7 @@
   <ul class="files">
     <li><a href="../files/playlist.m3u8">HLS プレイリスト (playlist.m3u8) — 検出されない</a></li>
     <li><a href="../files/manifest.mpd">DASH マニフェスト (manifest.mpd) — 検出されない</a></li>
-    <li><a href="../files/segment.ts">セグメント (segment.ts) — 検出されない（TypeScript 衝突回避でも除外）</a></li>
+    <li><a href="../files/segment.m4s">セグメント (segment.m4s) — 検出されない（avExtRe がブロック）</a></li>
     <li><a href="blob:https://example.com/0d6c1f2a-video">blob: 動画 — 検出されない</a></li>
     <li><a href="../files/sample.mp3">音声直リンク (sample.mp3) — 検出されない</a></li>
     <li><a href="../files/sample.wav">音声直リンク (sample.wav) — 検出されない</a></li>
@@ -170,7 +172,7 @@
     <li><code>&lt;audio&gt;</code> 本体 src・<code>&lt;source&gt;</code>（③）と、⑦の音声直リンク
         <code>sample.mp3</code> / <code>sample.wav</code> / <code>sample.ogg</code> / <code>sample.m4a</code> / <code>sample.flac</code></li>
     <li><code>data-mp3</code>（⑥）</li>
-    <li>HLS <code>playlist.m3u8</code> / DASH <code>manifest.mpd</code> / <code>segment.ts</code> / blob: 動画（⑦）</li>
+    <li>HLS <code>playlist.m3u8</code> / DASH <code>manifest.mpd</code> / <code>segment.m4s</code> / blob: 動画（⑦）</li>
     <li><code>&lt;use href="#inline-sprite"&gt;</code> のインライン #fragment 参照（④）</li>
   </ul>
 </div>

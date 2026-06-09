@@ -16,8 +16,8 @@
   </header>
 
   <div class="note">
-    <code>lib/file-utils.js</code> の <code>knownExtRe</code> に列挙された <strong>225 拡張子</strong>と、
-    <code>popup.js</code> / <code>page-interceptor.js</code> に実装された <strong>40 以上の検出手法</strong>を網羅したテストフィクスチャです。
+    <code>lib/file-utils.js</code> の <code>knownExtRe</code> を展開した <strong>214 拡張子</strong>（<code>docx?</code> 等の短縮表記を実拡張子に展開した数）と、
+    <code>popup.js</code> / <code>page-interceptor.js</code> に実装された <strong>45 以上の検出手法</strong>（v4.5.1 時点）を網羅したテストフィクスチャです。
     各ページを開いて拡張機能のポップアップから <strong>Scan</strong> を実行してください。
   </div>
 
@@ -77,7 +77,7 @@
   <div class="cards">
     <a href="pages/11-platform-mocks.html">
       <strong>11. プラットフォーム特化（Gmail / Yahoo / Outlook / Salesforce）</strong>
-      <span>download_url 属性 / disp=safe→attd / aria-label / 069 ContentDocument</span>
+      <span>download_url 属性 / disp=safe→attd / aria-label / Salesforce Experience Cloud（069 ContentDocument・068 サムネ → shepherd URL 合成）</span>
     </a>
     <a href="pages/14-magic-bytes.html">
       <strong>14. マジックバイト判定</strong>
@@ -85,7 +85,7 @@
     </a>
     <a href="pages/15-css-scanning.html">
       <strong>15. CSS スキャン</strong>
-      <span>backgroundImage / image-set / border-image / @font-face / cursor</span>
+      <span>backgroundImage / image-set / border-image / list-style-image（@font-face・cursor・::before content url は非対応）＋ ::before 種別→ファイル名（gafPseudoText）</span>
     </a>
     <a href="pages/09-misdetection-traps.html">
       <strong>09. 誤検出トラップ</strong>
@@ -104,11 +104,15 @@
   <h2>⑤ 全拡張子・クロール深度</h2>
   <div class="cards">
     <a href="pages/10-all-extensions.html">
-      <strong>10. 全 225 拡張子の網羅リンク</strong>
-      <span>knownExtRe に列挙されたすべての対応拡張子</span>
+      <strong>10. 全 214 拡張子の網羅リンク</strong>
+      <span>knownExtRe を展開した全対応拡張子（動画は直リンクのみ）</span>
+    </a>
+    <a href="pages/18-crawl-nav.html">
+      <strong>18. クローラのナビ抽出（<code>&lt;a href&gt;</code> 以外）</strong>
+      <span>javascript: / onclick / icon-pdf 拡張子なし / .php ナビを深度1で辿る</span>
     </a>
     <a href="pages/deep/level-1.html">
-      <strong>16. Deep Scan チェーン (level-1 → 3)</strong>
+      <strong>19. Deep Scan チェーン (level-1 → 3)</strong>
       <span>クロール深度ごとに到達できるファイル数が増加</span>
     </a>
   </div>

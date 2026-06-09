@@ -80,13 +80,19 @@
 
   <h2>期待される検出</h2>
   <div class="note">
-    <strong>検出されてはならない（結果ゼロ・クロールもしない）:</strong>
-    本ページの全リンク。<br>
-    ・SourceForge / naturalearthdata / 「download」を含むナビ URL ＝ ナビゲーションページで実体ファイル無し。<br>
+    <strong>① 結果一覧に出てはならない（全リンク共通）:</strong>
+    本ページの全リンク。スキャン結果（ファイル一覧）に 1 件も現れないこと。<br>
+    ・SourceForge 一覧/レビュー/管理・naturalearthdata <code>/downloads/&lt;slug&gt;/</code>・「download」を含むナビ URL
+    ＝ ファイル signal が無い（<code>urlMatch</code>/<code>urlPattern</code> false）ためファイルにならない。<br>
     ・<code>chrome://</code> / <code>about:</code> ＝ スキャン不可スキーム。<br>
-    ・「セッション破壊リンク」節の 8 件 ＝ <code>isSessionMutatingLink</code> によりクロール enqueue から除外。
-    ディープスキャンでこれらがページキューに入ったり結果一覧に現れたら、
-    <code>isSessionMutatingLink</code> のリグレッションです。<br>
+    <strong>② さらにクロール（フロンティア enqueue）もしてはならない:</strong>
+    「セッション破壊リンク」節の 8 件＝<code>isSessionMutatingLink</code> によりクロール enqueue から除外。
+    <code>chrome://</code> / <code>about:</code> も同様にクロール対象外。
+    これらがディープスキャンでページキューに入ったら <code>isSessionMutatingLink</code>（またはスキームガード）のリグレッションです。<br>
+    <strong>※ 補足:</strong> SourceForge <code>/files/</code> や naturalearthdata <code>/downloads/&lt;slug&gt;/</code> は
+    <code>nonFileUrlRe</code> でブロックされるわけではないため、ディープスキャンでは
+    <strong>同一サイトのナビページとして enqueue され得ます（これは正しいクローラ挙動）</strong>。
+    保証されるのは「<strong>ファイル結果に出ないこと</strong>」であって、これら 4 件は必ずしも「クロールしない」対象ではありません。<br>
     <strong>検出されるべき:</strong> なし（このページは誤検出トラップ専用で、ダウンロード対象の実ファイルは置いていません）。
   </div>
 </div>

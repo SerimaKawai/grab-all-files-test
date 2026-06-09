@@ -27,26 +27,41 @@
     <strong>対象コード:</strong> <code>popup.js</code> の <code>fetchAndParse</code>（クロール時のページ解析）と
     <code>crawlUrl</code>（フロンティア管理）。
     <ul>
-      <li><code>jsUrlLiteralRe</code> + <code>routeJsCandidate</code>：
+      <li><code>jsUrlLiteralRe</code> + <code>routeJsCandidate</code>（popup.js 9091 / 9093 付近）：
         <code>a[href^="javascript:"]</code> / <code>[onclick]</code> の文字列から
-        パス形のクォート済みリテラルを抽出し、ファイル形なら <code>addFileUrl</code>、
-        それ以外はクロールリンク候補として <code>links</code> に積む（zocbo.com 由来）。</li>
-      <li><code>crawlFileExtRe</code> のサーバスクリプト除外
-        （<code>php|phtml|asp|aspx|jsp|jspx|jspa|cfm|cgi|do|action|ashx|axd|svc|mvc</code>）：
+        クォート済みリテラルを抽出し、ファイル形なら <code>addFileUrl</code>、
+        それ以外はクロールリンク候補として <code>links</code> に積む（zocbo.com 由来）。<br>
+        <strong>抽出できるリテラルの形（重要な制約・学んだ落とし穴）:</strong>
+        <code>jsUrlLiteralRe</code> がマッチするのは
+        (1) 絶対 URL（<code>http(s)://…</code> や <code>//host/…</code>）、
+        (2) <code>/</code> で始まるルート相対パス、
+        (3) <code>/</code> を<strong>一切含まない</strong>素のファイル名（例 <code>js-target.html</code>）
+        の 3 形のみ。<br>
+        <strong><code>crawl/js-target.html</code> のように途中に <code>/</code> を含む
+        サブディレクトリ相対パスは<em>マッチしない</em></strong>（node で実 regex 検証済み）。
+        そのため本テストの A・B は、ハブと同じ <code>pages/</code> 直下に置いた
+        <strong>素のファイル名</strong>で参照している。</li>
+      <li><code>crawlFileExtRe</code> のサーバスクリプト除外（popup.js 7973 付近：
+        <code>php\d?|phtml|phps|asp|aspx|jsp|jspx|jspa|cfm|cfml|cgi|fcgi|do|action|ashx|axd|svc|mvc</code>）：
         <code>classes.php?id=N</code> のようなリンクは「ファイル」ではなく
         「次ページへのルート」として<strong>フロンティアに積まれる（drop されない）</strong>
         （yotsuyaotsuka chugaku_kakomon 由来）。</li>
-      <li><code>detectIconTypeHint</code> + <code>icon-pdf</code>：
+      <li><code>detectIconTypeHint</code> + <code>icon-pdf</code>（popup.js 8798 / 8801 / 9038 付近）：
         拡張子のない <code>&lt;a class="icon-pdf" href=".../question/"&gt;問題PDF&lt;/a&gt;</code> は
-        アイコンクラスの type ヒントで PDF とみなす（toshin new_kakomon_db 由来）。</li>
+        アンカーループ内でアイコンクラスの type ヒントが PDF と判定し、
+        <strong>その URL 自体を深度 0 の PDF 候補として <code>files</code> に追加する</strong>
+        （toshin new_kakomon_db 由来）。これは<strong>ファイル分岐</strong>であって
+        「ページとしてクロールする」分岐ではない点に注意。</li>
     </ul>
   </div>
 
   <div class="note">
     <strong>確認方法:</strong> 拡張機能でこのページを <strong>クロール深度 1 以上</strong>（ディープスキャン）で Scan してください。<br>
-    深度 0（このページのみ）では、このハブ自身が直接持つファイルのみが検出されます（下記「このページ直下のファイル」）。<br>
-    深度 1 で、下の各ナビ（JS / onclick / icon-pdf / .php相当）が指す子ページに到達し、
-    そこにある <code>../../files/*.pdf</code> が検出されます。
+    深度 0（このページのみ）では、ハブ自身が直接持つファイル、
+    <strong>および icon-pdf の拡張子なし URL（= それ自体が PDF とみなされる）</strong>が検出されます。<br>
+    深度 1 で、JS / onclick / .php相当 のナビが指す子ページに到達し、
+    そこにある <code>../files/*</code> が追加検出されます。<br>
+    （icon-pdf の <code>crawl/question/</code> は<strong>ページとしては辿られない</strong>＝中の PDF は個別検出されません。下の C 参照。）
   </div>
 
   <!-- ===== このハブ自身のファイル（深度 0 で検出される） ===== -->
@@ -54,41 +69,54 @@
   <ul class="files">
     <li><a href="../files/sample.pdf">sample.pdf（ハブ直下・素の a href）</a></li>
   </ul>
-  <p class="note">↑ これは普通の <code>&lt;a href&gt;</code> なので深度 0 でも検出される。以下のナビは深度 1 以上で辿られる。</p>
+  <p class="note">↑ これは普通の <code>&lt;a href&gt;</code> なので深度 0 でも検出される。
+     これに加えて下の C（icon-pdf）の URL も深度 0 で PDF として検出される。
+     A・B・D のナビ先は深度 1 以上で辿られる。</p>
 
   <!-- ===== CASE A: javascript: スキームの href ===== -->
   <h2>A. <code>javascript:</code> スキームの href</h2>
   <p>
-    <a href="javascript:goPage('crawl/js-target.html')">→ JS ターゲットページ（問題一覧）</a>
+    <a href="javascript:goPage('crawl-js-target.html')">→ JS ターゲットページ（問題一覧）</a>
   </p>
   <p class="note">
-    href は <code>javascript:goPage('crawl/js-target.html')</code>。素の href としては辿れないが、
-    <code>jsUrlLiteralRe</code> がクォート内の <code>'crawl/js-target.html'</code>（パス形・<code>.html</code>）を抽出し、
-    クロールリンク候補にする。→ 子ページの <code>crawl/js-target.html</code> が深度 1 で解析される。
+    href は <code>javascript:goPage('crawl-js-target.html')</code>。素の href としては辿れないが、
+    <code>jsUrlLiteralRe</code> がクォート内の <code>'crawl-js-target.html'</code>（<code>/</code> を含まない
+    素のファイル名・<code>.html</code>）を抽出し、クロールリンク候補にする。
+    → 子ページ <code>crawl-js-target.html</code>（ハブと同じ <code>pages/</code> 直下）が深度 1 で解析される。<br>
+    <strong>注意:</strong> 旧来の <code>'crawl/js-target.html'</code> のように <code>/</code> を含む形は
+    <code>jsUrlLiteralRe</code> に<em>マッチしない</em>ため、素のファイル名にしてある。
   </p>
 
   <!-- ===== CASE B: onclick ハンドラ ===== -->
   <h2>B. <code>onclick</code> ハンドラ（href="#"）</h2>
   <p>
-    <a href="#" onclick="location.href='crawl/onclick-target.html'; return false;">→ onclick ターゲットページ（解答一覧）</a>
+    <a href="#" onclick="location.href='crawl-onclick-target.html'; return false;">→ onclick ターゲットページ（解答一覧）</a>
   </p>
   <p class="note">
     href は <code>#</code>（自分自身）だが、<code>onclick</code> 文字列の中の
-    <code>'crawl/onclick-target.html'</code> を <code>jsUrlLiteralRe</code> が抽出 → クロールリンク候補。
-    → 子ページの <code>crawl/onclick-target.html</code> が深度 1 で解析される。
+    <code>'crawl-onclick-target.html'</code>（<code>/</code> を含まない素のファイル名）を
+    <code>jsUrlLiteralRe</code> が抽出 → クロールリンク候補。
+    → 子ページ <code>crawl-onclick-target.html</code>（ハブと同じ <code>pages/</code> 直下）が深度 1 で解析される。
   </p>
 
   <!-- ===== CASE C: アイコンクラス付き拡張子なしリンク（icon-pdf） ===== -->
-  <h2>C. 拡張子なし <code>icon-pdf</code> リンク（ディレクトリ）</h2>
+  <h2>C. 拡張子なし <code>icon-pdf</code> リンク（深度 0 で PDF 検出）</h2>
   <p>
     <a class="icon-pdf" href="crawl/question/">問題PDF</a>
   </p>
   <p class="note">
-    href は <code>crawl/question/</code>（末尾スラッシュ・拡張子なし）。通常はナビリンクに見えるが、
-    <code>class="icon-pdf"</code> を <code>detectIconTypeHint</code> が読み、PDF とみなす。<br>
-    本テストサイトはこのディレクトリを <code>crawl/question/index.html</code> として配信し、
-    その中に実体 PDF へのリンクを置いている。GitHub Pages では <code>crawl/question/</code> が
-    <code>index.html</code> に解決され、そこから <code>../../files/sample-2.pdf</code> が辿れる。
+    href は <code>crawl/question/</code>（末尾スラッシュ・拡張子なし）の<strong>素の <code>&lt;a href&gt;</code></strong>
+    （<code>javascript:</code> ではないのでサブディレクトリ相対パスでよい）。通常はナビリンクに見えるが、
+    <code>class="icon-pdf"</code> を <code>detectIconTypeHint</code> が読み、アンカーループ内で
+    <strong>この URL 自体を深度 0 の PDF 候補（typeHint=pdf）として <code>files</code> に追加する</strong>
+    （toshin new_kakomon_db と同型。<code>guess</code> 扱いで <code>nonFileUrlRe</code> を回避）。<br>
+    つまり拡張機能は <code>crawl/question/</code> を<strong>「PDF へのリンク」</strong>とみなすだけで、
+    <strong>HTML ページとしてクロール（解析）はしない</strong>。
+    そのため中の <code>sample-2.pdf</code> は<strong>個別には検出されない</strong>。<br>
+    本テストサイトはこのディレクトリを <code>crawl/question/index.html</code> として配信するので
+    URL 自体は 404 にならない（解決する）。ただし返るのは HTML であり実体 PDF バイト列ではないため、
+    <strong>ダウンロードの正当性は静的ホストでは保証されない</strong>。
+    本テストの主眼は<strong>「拡張子なし URL が深度 0 の PDF として検出されること」</strong>。
   </p>
 
   <!-- ===== CASE D: サーバスクリプト .php ナビリンク ===== -->
@@ -116,33 +144,48 @@
   <!-- ===== 期待される検出 ===== -->
   <h2>期待される検出</h2>
   <div class="note">
-    <strong>深度 0（このページのみ）で検出されるべき:</strong>
+    <strong>深度 0（このページのみ）で検出されるべき — 2 件:</strong>
     <ul>
-      <li><code>../files/sample.pdf</code>（ハブ直下の素の <code>a href</code>）— 1 件のみ。</li>
+      <li><code>../files/sample.pdf</code>（ハブ直下の素の <code>a href</code>）。</li>
+      <li><code>crawl/question/</code>（C の <code>icon-pdf</code> 拡張子なし URL）
+        — <code>detectIconTypeHint</code> が <code>icon-pdf</code> を PDF と判定し、
+        <strong>URL 自体を PDF 候補として深度 0 で追加</strong>する。</li>
     </ul>
     <strong>深度 0 で検出されては<em>ならない</em>もの:</strong>
     <ul>
-      <li>A/B/C/D の子ページ内の PDF（深度 1 以上で初めて辿られる）。</li>
+      <li>A / B / D の子ページ内のファイル（深度 1 以上で初めて辿られる）。</li>
     </ul>
 
     <strong>深度 1（ディープスキャン）で追加検出されるべき:</strong>
     <ul>
-      <li><code>crawl/js-target.html</code> 経由 → <code>../../files/sample-1.pdf</code>
-        （javascript: href から <code>jsUrlLiteralRe</code> で抽出）。</li>
-      <li><code>crawl/onclick-target.html</code> 経由 → <code>../../files/sample.docx</code>
-        （onclick から <code>jsUrlLiteralRe</code> で抽出）。docx は素の a href なので確実に検出。</li>
-      <li><code>crawl/question/</code>（= <code>crawl/question/index.html</code>）経由 → <code>../../files/sample-2.pdf</code>
-        （拡張子なし URL を <code>icon-pdf</code> の type ヒントで PDF とみなしページとして辿る）。</li>
-      <li><code>crawl/classes.html?id=1</code> 経由 → <code>../../files/sample.pdf</code>
-        （サーバスクリプト相当のナビが enqueue され到達。実機では .html 版で確認）。</li>
+      <li><code>crawl-js-target.html</code> 経由 → <code>../files/sample-1.pdf</code>
+        （<code>javascript:</code> href の素のファイル名を <code>jsUrlLiteralRe</code> で抽出 → enqueue）。</li>
+      <li><code>crawl-onclick-target.html</code> 経由 → <code>../files/sample.docx</code>
+        （<code>onclick</code> の素のファイル名を <code>jsUrlLiteralRe</code> で抽出 → enqueue）。
+        docx は子ページの素の a href なので確実に検出（DOC 系を選択時）。</li>
+      <li><code>crawl/classes.html?id=1</code> 経由 → <code>../files/sample.pdf</code>
+        （サーバスクリプト相当のナビが enqueue され到達。<code>sample.pdf</code> は
+        既に深度 0 で検出済みなので <strong>URL 重複（dedup）</strong>となり件数は増えない）。</li>
+    </ul>
+
+    <strong>深度 1 でも検出されない（重要）:</strong>
+    <ul>
+      <li>C の <code>crawl/question/</code> 内の <code>sample-2.pdf</code> —
+        C の URL は<strong>ページとしてクロールされない</strong>（深度 0 のファイル分岐に入る）ため、
+        その内側の <code>sample-2.pdf</code> は<strong>個別には到達・検出されない</strong>。</li>
     </ul>
 
     <strong>挙動として確認したいこと（検出件数ではなく経路）:</strong>
     <ul>
-      <li><code>javascript:</code> / <code>onclick</code> 内のクォート済みパス（A・B）がフロンティアに積まれること。</li>
-      <li><code>icon-pdf</code> の拡張子なし URL（C）が「ナビ」ではなく「PDF を持つページ」として辿られること。</li>
+      <li><code>javascript:</code> / <code>onclick</code> 内のクォート済み<strong>素のファイル名</strong>（A・B）が
+        <code>jsUrlLiteralRe</code> で抽出されフロンティアに積まれること
+        （<code>/</code> を含むサブディレクトリ相対パスは抽出されない、という制約込み）。</li>
+      <li><code>icon-pdf</code> の拡張子なし URL（C）が「ナビ」ではなく
+        <strong>「それ自体が PDF」</strong>として<strong>深度 0</strong> で検出されること
+        （ページとしては辿られない）。</li>
       <li><code>classes.php?id=1</code>（D）が <code>crawlFileExtRe</code> でファイル扱いされず enqueue されること
-        （静的ホストでは 404 だが、enqueue されること自体が正しい。.html 版で到達を確認）。</li>
+        （静的ホストでは <code>.php</code> は 404 だが、enqueue されること自体が正しい挙動。
+        到達と PDF 検出は <code>.html?id=1</code> 版で確認）。</li>
     </ul>
 
     <strong>検出されては<em>ならない</em>もの:</strong>

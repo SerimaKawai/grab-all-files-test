@@ -58,8 +58,8 @@
 
     "depth": "0",                                       // 深さセレクタの値（"0"="このページのみ", "1+"=クロール）
 
-    "file_types_selected_count": 225,                   // 選択中の拡張子数
-    "file_types_total": 225,                            // 対応拡張子総数
+    "file_types_selected_count": 214,                   // 選択中の拡張子数
+    "file_types_total": 214,                            // 対応拡張子総数
     "file_types_selected": ["3fr", "3g2", "..."],
 
     // ─── Deep Scan 時のクロールサマリー（depth >= 1 で populated）───
@@ -160,11 +160,15 @@
 | `pages/07-blob-fetch.html` | 動的 | スキャン後ボタン押下で増加 |
 | `pages/08-no-extension.html` | 30+ | 拡張子なし URL の推定検出 |
 | `pages/09-misdetection-traps.html` | **0** | 除外フィルタが機能しているか |
-| `pages/10-all-extensions.html` | 225 | 全対応拡張子 |
-| `pages/11-platform-mocks.html` | 12+ | Gmail/Yahoo/Outlook/Salesforce |
+| `pages/10-all-extensions.html` | 214 | 全対応拡張子（直リンク動画含む） |
+| `pages/11-platform-mocks.html` | 12+ | Gmail/Yahoo/Outlook/Salesforce Experience Cloud |
 | `pages/12-pdfjs-viewer.html` | 30+ | PDF.js viewer URL パターン |
+| `pages/13-media-and-svg.html` | 16 | 直リンク動画（音声/HLS/blob は非検出）/ SVG / 短縮 data-* |
 | `pages/14-magic-bytes.html` | 6 | 拡張子ミスマッチ判定 |
-| `pages/15-css-scanning.html` | 15+ | image-set / border-image / @font-face |
+| `pages/15-css-scanning.html` | 12+ | image-set / border-image / list-style（@font-face・cursor・::before url は非検出）+ ::before 種別 |
+| `pages/16-contextual-naming.html` | 文脈 | 学校_年度_科目_種別 合成 / hex Title / 列ヘッダ / URL トークン |
+| `pages/17-active-capture.html` | 操作 | Active Capture Lv2 / SPS POST（クリック後に傍受） |
+| `pages/18-crawl-nav.html` | 深度1 | javascript:/onclick/icon-pdf/.php ナビ抽出 |
 
 ### 2. 誤検出チェック
 

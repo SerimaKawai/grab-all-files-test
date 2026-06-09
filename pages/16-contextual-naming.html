@@ -61,7 +61,10 @@
       <div class="links"><a href="../files/sample.webp">PDF</a></div></div>
     <div class="exam-row"><span class="subject">英語</span>
       <div class="links"><a href="../files/sample.txt">PDF</a></div></div>
-    <!-- 期待: 麻布中学校_2025_算数 / 麻布中学校_2025_英語 （PDFは汎用なので種別なし） -->
+    <!-- 期待: 合成なし。ラベル「PDF」のまま。.exam-row は行として認識され科目（算数/英語）も
+         取れるが、種別シグナル（ラベルの問題/解答・列ヘッダ種別・行内の種別アンカー）が一つも
+         無いため種別ゲート `if(!isType && !effHeaderType && !hasTypeAnchor) return ""` で合成中止。
+         （仮に合成しても学校トークンは gafPageSchool キャッシュにより開成中学校＝麻布ではない） -->
   </section>
 
   <!-- ===== CASE C: 否定 — 一覧でない一般リンクは触らない ===== -->
@@ -110,7 +113,12 @@
     各列の科目（英語 / 数学 / 理科）は列見出しに置き、行見出し（<code>th</code>）に種別（問題 / 解答）を置く。
     <code>composeContextualName</code> は <code>rowSubj</code> が無いとき
     <code>gafColumnSubjectWord(el)</code> で列ヘッダ科目を補完し、
-    種別は行内の <code>[問題PDF]/[解答PDF]</code> アンカー（<code>gafBlockHasTypeAnchor</code>）で発火する。
+    種別は行内の <code>[問題PDF]/[解答PDF]</code> アンカー（<code>gafBlockHasTypeAnchor</code>）で発火する。<br>
+    <strong>注（学校名はページ全体で1つ）:</strong> <code>gafPageSchool</code> は文書ごとに
+    最初の「学校名らしい見出し」をキャッシュして全リンクへ適用する。このテストページでは
+    最初の学校見出しが CASE A の <code>開成中学校</code> なので、E/F の合成名の学校トークンも
+    <code>開成中学校</code> になる（下の <code>桜蔭中学校</code> 見出しは構造説明用で、合成名の学校には反映されない）。
+    これは仕様であり不具合ではない。検証で重要なのは<strong>科目（列ヘッダ由来）と種別と年が正しく入ること</strong>。
   </div>
   <section>
     <h2>桜蔭中学校</h2>
@@ -134,9 +142,11 @@
         </tr>
       </tbody>
     </table>
-    <!-- 期待: 桜蔭中学校_2026_英語_問題 / 桜蔭中学校_2026_数学_問題 / 桜蔭中学校_2026_理科_問題
-              桜蔭中学校_2026_英語_解答 / 桜蔭中学校_2026_数学_解答 / 桜蔭中学校_2026_理科_解答
-         （科目は列ヘッダから、種別はリンク自身のラベル「問題PDF/解答PDF」から） -->
+    <!-- 期待（jsdom で検証済み）:
+              開成中学校_2026_英語_問題 / 開成中学校_2026_数学_問題 / 開成中学校_2026_理科_問題
+              開成中学校_2026_英語_解答 / 開成中学校_2026_数学_解答 / 開成中学校_2026_理科_解答
+         科目は列ヘッダ(th)から gafColumnSubjectWord で復元、種別はリンク自身のラベル「問題PDF/解答PDF」から。
+         学校トークンはページ全体で 1 つ（gafPageSchool キャッシュ）= 開成中学校（上の注参照）。 -->
   </section>
 
   <!-- ===== CASE F: 科目/種別/年 が URL パスから復元できる ===== -->
@@ -145,9 +155,11 @@
     対象: <code>lib/popup-utils.js</code> の <code>gafUrlExamTokens</code>（URL パスの romaji exam slug
     <code>kokugo=国語</code> / <code>mondai=問題</code> 等から科目・種別・年を復元。
     <strong>同一ステムが科目と種別を両方含むとき(paired)のみ</strong>採用＝<code>kokugo-mondai</code>）。
-    呼び出しは <code>composeContextualName</code> で、行に種別ラベル
-    <code>[問題PDF]/[解答PDF]</code>（<code>gafBlockHasTypeAnchor</code>）があり、かつ
-    h3 から年が取れて種別ゲートを通過したあとに、URL トークンが科目を<strong>補完</strong>する。
+    呼び出しは <code>composeContextualName</code> で、リンク自身のラベル「問題/解答」が
+    種別（<code>isType</code>）として先に種別ゲートを通過したあとに、URL トークンが科目を<strong>補完</strong>する。<br>
+    <strong>注（学校名はページ全体で1つ）:</strong> E と同じく学校トークンは <code>gafPageSchool</code> の
+    キャッシュにより全リンク共通＝<code>開成中学校</code>になる（下の <code>女子学院中学校</code> 見出しは
+    構造説明用）。F で検証したいのは<strong>科目「国語」が URL パスの kokugo から復元されること</strong>。
   </div>
   <section>
     <h2>女子学院中学校</h2>
@@ -156,9 +168,10 @@
       <li><a href="../files/kokugo-mondai.pdf">問題PDF</a></li>
       <li><a href="../files/kokugo-mondai.pdf">解答PDF</a></li>
     </ul>
-    <!-- 期待: 女子学院中学校_2025_国語_問題 / 女子学院中学校_2025_国語_解答
-         科目「国語」は本文に無く、URL パスの kokugo（kokugo-mondai が paired）から復元される。
-         種別「問題/解答」はリンク自身のラベルから（isType=true）。 -->
+    <!-- 期待（jsdom で検証済み）: 開成中学校_2025_国語_問題 / 開成中学校_2025_国語_解答
+         科目「国語」は本文に無く、URL パス kokugo-mondai（科目+種別が同一ステム=paired）の
+         kokugo から復元される。種別「問題/解答」はリンク自身のラベルから（isType=true）。
+         年「2025」は直近の h3「2025年度」から。学校は開成中学校（ページ全体で1つ・上の注参照）。 -->
     <div class="note">
       <strong>重要（URL は単独では絶対に発火しない）:</strong>
       <code>gafUrlExamTokens</code> が返す科目/種別/年は、DOM 側の種別シグナル
@@ -176,7 +189,7 @@
   <h2>F-否定. URL だけでは合成しない</h2>
   <section>
     <p>
-      次のリンクは paired な URL slug（<code>suugaku-mondai</code> = 数学＋問題）を持つが、
+      次のリンクは paired な URL slug（<code>kokugo-mondai</code> = 国語＋問題）を持つが、
       ラベルは汎用「PDF」で、周囲に種別ラベルアンカーも列ヘッダ種別も無いため
       <strong>合成されない</strong>（種別ゲート未通過）。
     </p>
@@ -189,21 +202,26 @@
   <div class="note">
     <strong>検出されるべき（合成名 or デコード後タイトル）:</strong>
     <ul class="files">
-      <li>A: 開成中学校_2026_国語_問題 ほか各行（既存）</li>
-      <li>B: 麻布中学校_2025_算数 / 麻布中学校_2025_英語（既存・種別なし）</li>
+      <li>A: 開成中学校_2026_国語_問題 ほか各行（既存・科目=行セル）</li>
       <li>D: <code>sample-hextitle.pdf</code> のタイトルが <strong>国語</strong>（hex /Title を decode＋tidy）</li>
-      <li>E: 桜蔭中学校_2026_英語_問題 / _数学_問題 / _理科_問題 / _英語_解答 / _数学_解答 / _理科_解答
-          （科目=列ヘッダ <code>th</code>、種別=リンクラベル）</li>
-      <li>F: 女子学院中学校_2025_国語_問題 / 女子学院中学校_2025_国語_解答
-          （科目=URL の kokugo を paired 補強、種別=ラベル）</li>
+      <li>E: 開成中学校_2026_英語_問題 / _数学_問題 / _理科_問題 / _英語_解答 / _数学_解答 / _理科_解答
+          （科目=列ヘッダ <code>th</code>、種別=リンクラベル。学校はページ全体で 1 つ）</li>
+      <li>F: 開成中学校_2025_国語_問題 / 開成中学校_2025_国語_解答
+          （科目=URL の kokugo を paired 補強、種別=ラベル、年=h3。学校はページ全体で 1 つ）</li>
     </ul>
     <strong>検出されても合成されないべき（ラベルのまま）:</strong>
     <ul class="files">
+      <li>B: ラベル「PDF」のまま（種別シグナルが無いため。<code>.exam-row</code> は行と認識されるが、
+          種別ラベル/列ヘッダ種別/種別アンカーのいずれも無く種別ゲート未通過）</li>
       <li>C: 「資料PDF」「2024年度入学試験要項」はそのまま</li>
       <li>F-否定: paired slug があっても種別 DOM 証拠が無ければ「PDF」のまま（URL は単独発火しない）</li>
     </ul>
+    <span class="note">注: 学校トークン「開成中学校」がすべての合成名に付くのは、
+    <code>gafPageSchool</code> が文書ごとに最初の学校見出しをキャッシュして全リンクへ適用するため。
+    実サイト（学校ごとに別ページ）では各ページの学校名が入る。</span><br>
     各 PDF/Office ファイル自体は通常どおり検出される。確認は「タイトル」列、または
-    「タイトルでリネーム」ON でのダウンロード名で行う。
+    「タイトルでリネーム」ON でのダウンロード名で行う（上記はすべて jsdom で
+    <code>lib/popup-utils.js</code> の <code>cleanLinkText</code> を実行して検証済み）。
   </div>
 </div>
 </body>

@@ -74,6 +74,26 @@
     font-size: 12px;
     padding: 4px;
   }
+
+  /* ===== resemom 相当: 種別ラベルを CSS ::before content だけで描画 =====
+     アンカーは空（textContent なし）。可視ラベル「問題」「正答」は
+     getComputedStyle(el, "::before").content からのみ復元できる。 */
+  .que-btn::before { content: "問題"; }
+  .ans-btn::before { content: "正答"; }
+  .que-btn, .ans-btn {
+    display: inline-block;
+    min-width: 4.5em;
+    text-align: center;
+    padding: 4px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    text-decoration: none;
+    color: #225;
+    background: #eef3fb;
+  }
+  ul.pseudo-list { list-style: none; padding: 0; margin: 6px 0; }
+  .pseudo-row { display: flex; gap: 14px; align-items: center; margin: 6px 0; max-width: 640px; }
+  .pseudo-row .subject { background: #e8f0e0; font-weight: bold; padding: 4px 12px; border-radius: 6px; min-width: 4em; text-align: center; }
 </style>
 </head>
 <body>
@@ -130,6 +150,66 @@
 
   <h2>外部スタイルシート</h2>
   <p><a href="../files/sample.css">sample.css</a> 自体もファイルとして検出されます（拡張子 <code>.css</code>）。</p>
+
+  <!-- ===== CSS ::before-only 種別ラベル → 文脈ファイル名へ折り込み（resemom 相当） ===== -->
+  <h2><code>::before content</code> の種別ラベルをファイル名へ復元</h2>
+  <div class="note">
+    <code>popup.js</code> 内の <code>gafPseudoText()</code> は、アンカー自身に
+    テキストノードが無いとき <code>getComputedStyle(el, "::before")</code> /
+    <code>::after</code> の <code>content</code> から可視キャプションを復元します。<br>
+    resemom の公立高入試一覧は「問題 / 正答」ボタンを空アンカー＋CSS擬似要素
+    （<code>.que::before{content:"問題"}</code> 等）で描いており、<code>textContent</code>
+    は空のため種別ゲートが発火せず命名が空振りしていました。復元した種別語は
+    <code>GAF_TYPE_WORDS</code>（問題 / 正答 / 正答例 / 解答 …）に照合され、
+    <code>composeContextualName()</code> が周囲の学校・年度・科目と合成して
+    <code>学校_年度_科目_種別</code> 形式のファイル名を作ります。<br>
+    <strong>重要:</strong> この復元は<strong>ライブ DOM（実ページ）でのみ</strong>動作します。
+    クロール（<code>DOMParser</code> 複製）側にはスタイルシートも
+    <code>defaultView</code> も無いため <code>getComputedStyle</code> が使えず、
+    本機能は完全に不活性です。「このページのみ」スキャンで確認してください。
+  </div>
+
+  <section>
+    <h2>都立日比谷高等学校 2025年度 入試問題</h2>
+
+    <!-- 行は <li>（item コンテナ）。gafFindRow の主経路が行を認識し、
+         空アンカーから ::before で復元した種別「問題/正答」が isType を発火させる。 -->
+    <ul class="pseudo-list">
+      <li class="pseudo-row">
+        <span class="subject">国語</span>
+        <a class="que-btn" href="../files/sample.pdf"></a>
+        <a class="ans-btn" href="../files/sample-1.pdf"></a>
+      </li>
+      <!-- アンカーは空。可視ラベル「問題」「正答」は CSS ::before だけが供給 -->
+      <!-- 期待: 都立日比谷高等学校_2025_国語_問題 / 都立日比谷高等学校_2025_国語_正答 -->
+
+      <li class="pseudo-row">
+        <span class="subject">数学</span>
+        <a class="que-btn" href="../files/sample-2.pdf"></a>
+        <a class="ans-btn" href="../files/sample.docx"></a>
+      </li>
+      <!-- 期待: 都立日比谷高等学校_2025_数学_問題 / 都立日比谷高等学校_2025_数学_正答 -->
+    </ul>
+  </section>
+
+  <div class="note">
+    <strong>期待される検出:</strong>
+    <ul class="files">
+      <li>4 本のリンク（<code>sample.pdf</code> / <code>sample-1.pdf</code> /
+        <code>sample-2.pdf</code> / <code>sample.docx</code>）がすべて検出される。</li>
+      <li>各リンクの種別語「問題 / 正答」は HTML テキストに存在せず、
+        <strong>CSS <code>::before</code> の <code>content</code> からのみ復元</strong>される
+        （<code>gafPseudoText</code> 経由・ライブ DOM 限定）。</li>
+      <li>復元した種別と、行内の科目（国語 / 数学）・直前 <code>&lt;h2&gt;</code> の学校名と
+        年度（2025）が合成され、ファイル名は
+        <code>都立日比谷高等学校_2025_国語_問題</code> /
+        <code>…_国語_正答</code> / <code>…_数学_問題</code> /
+        <code>…_数学_正答</code> のように一意になる
+        （「タイトルでリネーム」ON で確認）。</li>
+      <li><strong>クロール（深いスキャン）では種別が復元されない</strong>ため合成名は付かず、
+        リンク自体は拾えても名前は汎用のまま。ライブの「このページのみ」と比較すること。</li>
+    </ul>
+  </div>
 </div>
 </body>
 </html>

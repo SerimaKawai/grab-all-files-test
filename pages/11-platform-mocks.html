@@ -15,6 +15,10 @@
     background-size: cover;
     border: 1px solid var(--border);
   }
+  .sf-thumb { width: 40px; height: 40px; object-fit: cover; border: 1px solid var(--border); vertical-align: middle; }
+  .filerow .itemTitle { font-weight: 600; }
+  .filerow .slds-file-type { color: var(--muted); margin-left: 6px; font-size: 12px; }
+  .filerow .sf-meta { color: var(--muted); margin-left: 6px; font-size: 12px; }
 </style>
 </head>
 <body>
@@ -23,8 +27,10 @@
   <nav class="top"><a href="../index.html">← トップ</a></nav>
 
   <div class="note">
-    <code>popup.js:3003-3135</code> で実装されている Gmail / Yahoo!メール / Outlook / Salesforce 専用の検出ロジックを
-    再現する DOM 構造です。実際のメールサービスにログインした状態で動作確認するのが理想ですが、
+    <code>popup.js</code> 内の <code>getNetFiles()</code> に実装されている Gmail / Yahoo!メール / Outlook 専用の検出ロジック、
+    および Salesforce Experience Cloud 検出ブロック（<code>popup.js</code> の <code>.filerow</code> 走査・shepherd URL 合成処理、
+    付近のコメント「<em>Salesforce file detection (Experience Cloud / Lightning Community sites)</em>」）を
+    再現する DOM 構造です。実際のサービスにログインした状態で動作確認するのが理想ですが、
     最低限ここで構造的に検出できるかは確認できます。
   </div>
 
@@ -85,31 +91,116 @@
     </div>
   </div>
 
-  <h2>Salesforce Experience Cloud: <code>.filerow</code></h2>
-  <p><code>data-divid</code> から ContentDocument ID（069 で始まる 18 桁）を抽出して、
-  <code>/sfc/servlet.shepherd/document/download/</code> URL を組み立てます。</p>
+  <h2>Salesforce Experience Cloud: <code>.filerow</code> + shepherd URL 合成</h2>
+  <p>
+    Lightning Community / Experience Cloud のファイル一覧では、タイトルリンクが
+    <code>href="javascript:void(0)"</code> で実 URL を持ちません。拡張機能は各
+    <code>.filerow</code> から次の手がかりで <strong>credentialed な shepherd ダウンロード URL を合成</strong>します。
+  </p>
+  <ul class="note" style="margin:0 0 12px 18px;">
+    <li><strong>第 1 候補（069 = ContentDocumentId）:</strong>
+      <code>[data-divid]</code> 属性または <code>a[href*="/contentdocument/069…"]</code> から
+      <code>069</code> で始まる 15〜18 文字の ID を抽出し、
+      <code>&lt;base&gt;document/download/069…</code> を組み立てます。</li>
+    <li><strong>第 2 候補（068 = ContentVersionId、フォールバック）:</strong>
+      069 が取れない場合、サムネイル
+      <code>img[src*="servlet.shepherd"]</code> の <code>versionId=068…</code> から ID を回収し、
+      <code>&lt;base&gt;version/download/068…</code> を組み立てます。</li>
+    <li><strong>&lt;base&gt; の決定:</strong> サムネイル src が
+      <code>…/sfc/servlet.shepherd/</code> までのパスを既に含む場合はそれを正とします
+      （コミュニティ接頭辞が自動的に正しくなる）。無い場合は
+      <code>location.origin</code> + コミュニティ接頭辞（URL の <code>/s/</code> 直前のパス、例 <code>/ass</code>）+
+      <code>/sfc/servlet.shepherd/</code> を使います。</li>
+    <li><strong>拡張子（typeHint）:</strong> <code>rendition=ORIGINAL_&lt;Ext&gt;</code>、
+      サブタイトルの中黒（•）区切り末尾トークン、または <code>page=</code> 付きサムネイル（→ pdf 推定）から判定し、
+      拡張子なしの合成 URL が <code>nonFileUrlRe</code> によるコミュニティページ除外を生き残るよう付与します。</li>
+  </ul>
+
+  <p class="note">
+    このフィクスチャは <code>https://example.my.site.com/ass/s/files</code> のような
+    <strong>コミュニティ接頭辞 <code>/ass</code> 付き</strong>の Experience Cloud ページを想定しています。
+    実際の <code>file://</code> / <code>localhost</code> での閲覧では <code>location.pathname</code> に <code>/s/</code> が無いため、
+    接頭辞付き <code>&lt;base&gt;</code> は <strong>サムネイル src のパス</strong>（069 行・068 行の両方に明示）から導出されます。
+  </p>
+
+  <h3 style="margin:8px 0 4px;">069 ContentDocumentId（第 1 候補）</h3>
   <ul class="files mock">
-    <li class="filerow" data-divid="badge_069XXXXXXXXXX01">
-      <span class="itemTitle">設計書_v3.pdf</span>
+    <li class="filerow" data-divid="badge_069IT00000ABCD01">
+      <img class="sf-thumb" alt="" src="/ass/sfc/servlet.shepherd/version/renditionDownload?rendition=THUMB720BY480&versionId=068IT00000ABCD01&operationContext=CHATTER&page=0&rendition=ORIGINAL_Pdf">
+      <span class="itemTitle" title="設計書_v3.pdf">設計書_v3.pdf</span>
       <span class="slds-file-type">pdf</span>
+      <span class="sf-meta">2026/06/01 • 2.4 MB • pdf</span>
     </li>
-    <li class="filerow" data-divid="badge_069XXXXXXXXXX02">
-      <span class="itemTitle">予算管理_2026.xlsx</span>
+    <li class="filerow" data-divid="badge_069IT00000ABCD02">
+      <img class="sf-thumb" alt="" src="/ass/sfc/servlet.shepherd/version/renditionDownload?rendition=THUMB720BY480&versionId=068IT00000ABCD02&operationContext=CHATTER&page=0">
+      <span class="itemTitle" title="予算管理_2026.xlsx">予算管理_2026.xlsx</span>
       <span class="slds-file-type">excel</span>
+      <span class="sf-meta">2026/05/28 • 88 KB • xlsx</span>
     </li>
-    <li class="filerow" data-divid="badge_069XXXXXXXXXX03">
-      <span class="itemTitle">プロモーション資料.pptx</span>
+    <li class="filerow" data-divid="badge_069IT00000ABCD03">
+      <img class="sf-thumb" alt="" src="/ass/sfc/servlet.shepherd/version/renditionDownload?rendition=THUMB720BY480&versionId=068IT00000ABCD03&operationContext=CHATTER&page=0&rendition=ORIGINAL_Pptx">
+      <span class="itemTitle" title="プロモーション資料.pptx">プロモーション資料.pptx</span>
       <span class="slds-file-type">powerpoint</span>
     </li>
-    <li class="filerow" data-divid="badge_069XXXXXXXXXX04">
-      <span class="itemTitle">契約書ドラフト.docx</span>
+    <li class="filerow" data-divid="badge_069IT00000ABCD04">
+      <span class="itemTitle" title="契約書ドラフト.docx">契約書ドラフト.docx</span>
       <span class="slds-file-type">word</span>
+      <span class="sf-meta">2026/05/30 • 41 KB • docx</span>
     </li>
-    <li class="filerow" data-divid="badge_069XXXXXXXXXX05">
-      <span class="itemTitle">プロダクト写真.jpg</span>
+  </ul>
+
+  <h3 style="margin:8px 0 4px;">068 ContentVersionId フォールバック（<code>data-divid</code> なし → サムネイル <code>versionId=068…</code> から回収）</h3>
+  <ul class="files mock">
+    <li class="filerow">
+      <img class="sf-thumb" alt="" src="/ass/sfc/servlet.shepherd/version/renditionDownload?rendition=THUMB720BY480&versionId=068IT00000VERS01&operationContext=CHATTER&page=0&rendition=ORIGINAL_Jpg">
+      <span class="itemTitle" title="プロダクト写真.jpg">プロダクト写真.jpg</span>
       <span class="slds-file-type">image</span>
     </li>
   </ul>
+
+  <h3 style="margin:8px 0 4px;">本文内インクリンク（<code>a[href*="/contentdocument/069…"]</code> → shepherd download に変換）</h3>
+  <ul class="files mock">
+    <li>
+      <a href="/ass/s/contentdocument/069IT00000LINK01">議事録_2026Q2（プレビューリンク）</a>
+    </li>
+  </ul>
+
+  <div class="note">
+    <strong>Salesforce セクションの期待される検出</strong>
+    <p style="margin:6px 0 4px;">
+      合成 URL の <code>&lt;base&gt;</code> は、各行のサムネイル src が
+      <code>…/sfc/servlet.shepherd/</code> を含むため、そのパス（<code>/ass/sfc/servlet.shepherd/</code>）から導出されます。
+      したがってこのページを実ブラウザの <code>&lt;origin&gt;</code> で開いた場合、検出される URL は次のとおりです。
+    </p>
+    <p style="margin:4px 0;"><strong>検出される（5 件）:</strong></p>
+    <ul class="files" style="margin:0 0 6px 18px;">
+      <li><code>&lt;origin&gt;/ass/sfc/servlet.shepherd/document/download/069IT00000ABCD01</code>
+        → <code>設計書_v3.pdf</code>（069 優先、type=pdf）</li>
+      <li><code>&lt;origin&gt;/ass/sfc/servlet.shepherd/document/download/069IT00000ABCD02</code>
+        → <code>予算管理_2026.xlsx</code>（069 優先、type=xlsx）</li>
+      <li><code>&lt;origin&gt;/ass/sfc/servlet.shepherd/document/download/069IT00000ABCD03</code>
+        → <code>プロモーション資料.pptx</code>（069 優先、type=pptx）</li>
+      <li><code>&lt;origin&gt;/ass/sfc/servlet.shepherd/document/download/069IT00000ABCD04</code>
+        → <code>契約書ドラフト.docx</code>（069 優先。この行はサムネイル無し
+        ＝接頭辞は <code>location.pathname</code> の <code>/s/</code> 由来。実 Community 上は <code>/ass</code>、
+        <code>file://</code>/<code>localhost</code> では接頭辞なし <code>&lt;origin&gt;/sfc/servlet.shepherd/document/download/069IT00000ABCD04</code>）</li>
+      <li><code>&lt;origin&gt;/ass/sfc/servlet.shepherd/version/download/068IT00000VERS01</code>
+        → <code>プロダクト写真.jpg</code>（<strong>068 フォールバック</strong>。<code>data-divid</code> が無いため
+        サムネイルの <code>versionId=068…</code> から回収。<code>document/download</code> ではなく
+        <code>version/download</code> パスになる点に注意）</li>
+    </ul>
+    <p style="margin:4px 0;">
+      本文内インクリンク <code>/ass/s/contentdocument/069IT00000LINK01</code> は
+      <code>document/download/069IT00000LINK01</code> へ変換されます
+      （<code>sfBuildBase("")</code> 経由のため接頭辞は <code>location.pathname</code> 依存。
+      実 Community では <code>&lt;origin&gt;/ass/sfc/servlet.shepherd/document/download/069IT00000LINK01</code>、
+      テスト閲覧時は接頭辞なし）。
+    </p>
+    <p style="margin:4px 0;"><strong>検出されない:</strong>
+      <code>renditionDownload?…&versionId=068…</code> のサムネイル src 自体は
+      （069 が取れる行では）ダウンロード対象にならず、ID 回収にのみ使われます。
+      <code>data-divid</code>・069 リンク・068 サムネイルのいずれも無い <code>.filerow</code> は検出されません。</p>
+  </div>
 
   <h2>PDF.js ビューア: <code>window.PDFViewerApplication</code></h2>
   <p>PDF.js が読み込まれた状態を疑似的に再現します（ビューア本体は表示されません）。</p>

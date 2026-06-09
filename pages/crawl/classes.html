@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>18-D. サーバスクリプト相当ナビ経由の子ページ — Grab All Files テスト</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="site"><h1>18-D. サーバスクリプト相当ナビ（<code>classes.php?id=1</code>）経由の子ページ</h1></header>
+  <nav class="top"><a href="../../index.html">← トップ</a> ｜ <a href="../18-crawl-nav.html">← 18. ハブへ戻る</a></nav>
+
+  <div class="note">
+    このページは、ハブ（<code>18-crawl-nav.html</code>）のサーバスクリプト風ナビリンクから到達される想定の子ページ。<br>
+    本来の対象は <code>crawl/classes.php?id=1</code>。<code>crawlFileExtRe</code> はサーバスクリプト拡張子
+    （<code>php|phtml|asp|aspx|jsp|...</code>）をファイル regex から除外するため、
+    <code>classes.php?id=1</code> は「ファイル」ではなく「次ページへのルート」として
+    <strong>クロールフロンティアに積まれる（drop されない）</strong>。<br>
+    ただし GitHub Pages は <code>.php</code> を実行・配信できないため、実機検証では
+    <code>classes.php?id=1</code> は 404 になる。このページ（<code>classes.html?id=1</code>）は
+    同じナビ構造で実際に到達・PDF 検出を確認するための等価品。
+  </div>
+
+  <h2>このページにあるファイル（深度 1 で検出される）</h2>
+  <ul class="files">
+    <li><a href="../../files/sample.pdf">sample.pdf（学校別ページの固有ファイル）</a></li>
+  </ul>
+
+  <h2>期待される検出</h2>
+  <div class="note">
+    深度 1 のクロールで <code>../../files/sample.pdf</code> が検出される
+    （クエリ <code>?id=1</code> 付きの <code>.html</code> でも到達できることの確認）。<br>
+    実機の <code>.php</code> 検証ポイントは「<code>classes.php?id=1</code> がファイル扱いされず
+    enqueue されること」であり、静的ホストでは中身を配信できないため、到達と PDF 検出は
+    この <code>classes.html?id=1</code> 版で代替確認する。
+  </div>
+</div>
+</body>
+</html>

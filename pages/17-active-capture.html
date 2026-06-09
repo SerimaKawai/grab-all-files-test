@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>17. アクティブ取得 (Lv2) / SPS POST ダウンロード — Grab All Files テスト</title>
+<link rel="stylesheet" href="../assets/style.css">
+<style>
+  .mock { border: 1px dashed var(--border); padding: 12px; border-radius: 6px; margin: 8px 0; }
+  .mock h3 { margin-top: 0; font-size: 14px; color: var(--muted); }
+  table.dl { border-collapse: collapse; margin: 8px 0; width: 100%; max-width: 640px; }
+  table.dl th, table.dl td { border: 1px solid #ccd; padding: 6px 10px; text-align: left; }
+  table.dl th { background: #dde6f5; }
+  .fake-btn { display: inline-block; padding: 4px 12px; border: 1px solid #88a; border-radius: 6px;
+              background: #eef2fb; cursor: pointer; font-size: 13px; }
+  .fake-btn:hover { background: #dde6f5; }
+  .icon-dl::before { content: "\2b07"; }
+  .sps-row { display: flex; gap: 12px; align-items: center; margin: 6px 0; }
+  .phInfoThumbnailComment { font-weight: 600; }
+  .asyncThumbnailData { width: 40px; height: 40px; border: 1px solid var(--border); object-fit: cover; vertical-align: middle; }
+  #log { font-family: monospace; font-size: 12px; color: var(--muted); white-space: pre-wrap; margin-top: 6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="site"><h1>17. アクティブ取得 (Lv2) / SPS POST ダウンロード</h1></header>
+  <nav class="top"><a href="../index.html">← トップ</a></nav>
+
+  <div class="note">
+    <code>popup.js</code> の <strong>Active Capture (Lv2)</strong> 検出ブロック（<code>emitTrigger</code> /
+    <code>filenameExtFromText</code> / <code>findRowFilename</code>、<code>5369-5469</code> 行付近）と、
+    <strong>Tokio Marine SPS (u.tmnf.jp) アダプタ</strong>（<code>a.download_btn[data-donwloadactionurl]</code> /
+    <code>a.thumbnail_image[...]</code> → <code>postForm</code>、<code>5470-5572</code> 行付近）を再現する DOM 構造です。
+    実体は <code>page-interceptor.js</code> の <code>activeCaptureArmed()</code> / <code>maybeCaptureBytes</code> /
+    <code>__GAF_ACTIVE_CAPTURE__</code> ハンドラと連携します。
+  </div>
+
+  <div class="note">
+    <strong>重要 — この2系統は「クリックして初めてバイトが届く」検出です:</strong><br>
+    ・Scan の時点で拡張機能ができるのは、<u>クリック候補（トリガー項目）の一覧化だけ</u>です。実 URL は DOM に存在しません。<br>
+    ・実ファイルのバイトは、<code>ダウンロード</code> / <code>ZIP</code> / <code>結合</code> を押した時に拡張機能が各トリガーを
+      <b>自動クリック</b>し、ページ自身が発行する fetch / XHR / blob を <code>page-interceptor.js</code> が傍受して初めて取得されます
+      （ロケール <code>activeCaptureWarning</code> の説明どおり）。<br>
+    ・SPS の実案件が検出ゼロだった真因は <b>Edge の IE モード</b>（<code>internetexplorertabhost:</code> タブ）に
+      Chromium 拡張の DOM が届かなかったことであり、<u>本静的モックには無関係</u>です。本モックは通常の Chromium タブで動きます。<br>
+    ・本ページのクリックはすべて <b>無害</b>です（ページ遷移せず、<code>../files</code> のサンプルを取得するか no-op）。
+  </div>
+
+  <!-- ============================================================ -->
+  <h2>Active Capture Lv2: hrefless ダウンロードトリガー</h2>
+  <p>
+    本物の <code>href</code> を持たない（<code>#</code> / <code>javascript:</code> のみ、または属性なし）操作要素で、
+    <u>表示テキストが選択中スキャン種別の拡張子付きファイル名</u>になっているもの。拡張機能は実 URL を解決できないため、
+    <code>__GAF_ACTIVE_CAPTURE__::…</code> という<strong>センチネル項目</strong>（<code>activeCaptureTrigger:true</code>、
+    <code>activeCapture.filenameHint</code> 付き）として一覧化します。
+  </p>
+
+  <h3>シグナル (1): 要素自身のテキストがファイル名</h3>
+  <div class="mock">
+    <!-- button: 自身のテキストが「決算報告.pdf」。href なし → クリック候補 -->
+    <p><button type="button" class="fake-btn" data-filename="決算報告.pdf" onclick="acDownload('../files/sample.pdf', this); return false;">決算報告.pdf</button></p>
+
+    <!-- a: href="javascript:void(0)" + span のテキストが見積書.xlsx -->
+    <p><a href="javascript:void(0)" onclick="acDownload('../files/sample.xlsx', this); return false;"><span class="dl" data-doc="見積書.xlsx">見積書.xlsx</span></a></p>
+
+    <!-- role=button: data-doc にファイル名、テキストも一致 -->
+    <p><span role="button" tabindex="0" class="fake-btn" data-doc="議事録2026.docx" onclick="acDownload('../files/sample.docx', this); return false;">議事録2026.docx</span></p>
+  </div>
+
+  <h3>シグナル (2): ダウンロード操作 + 同じ行の別セルにファイル名</h3>
+  <p>
+    操作要素自身は「ダウンロード」やダウンロードアイコン（<code>DL_AFFORD_RE</code> / <code>fa-download</code> 等）で、
+    ファイル名は同じ行（<code>findRowFilename</code> が祖先6段以内を探索）の別セルにある形。1行=1トリガーに集約されます。
+  </p>
+  <table class="dl">
+    <thead><tr><th>ファイル名</th><th>操作</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>製品カタログ2026.pdf</td>
+        <td><button type="button" class="fake-btn" onclick="acDownload('../files/sample-1.pdf', this); return false;">ダウンロード</button></td>
+      </tr>
+      <tr>
+        <td>価格表.xlsx</td>
+        <td><a href="#" class="fake-btn icon-dl" aria-label="ダウンロード" onclick="acDownload('../files/sample.xlsx', this); return false;"> 保存</a></td>
+      </tr>
+      <tr>
+        <td>会社案内.pptx</td>
+        <td><span role="button" tabindex="0" class="fake-btn" title="download" onclick="acDownload('../files/sample.pptx', this); return false;">⬇</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>クリックしても検出されない（除外）対照</h3>
+  <p>状態変更ラベル（<code>MUTATE_RE</code>: 削除 / 送信 / ログアウト / cancel / submit 等）はファイル名が近くにあっても自動クリック対象外です。</p>
+  <div class="mock">
+    <!-- 行にファイル名「重要データ.pdf」があるが操作が「削除」→ MUTATE_RE でトリガー化されない -->
+    <table class="dl">
+      <tbody>
+        <tr>
+          <td>重要データ.pdf</td>
+          <td><button type="button" class="fake-btn" onclick="return false;">削除</button></td>
+        </tr>
+      </tbody>
+    </table>
+    <!-- 自身テキストがファイル名でも MUTATE 語を含む → 除外 -->
+    <p><button type="button" class="fake-btn" onclick="return false;">申請書.pdf を送信</button></p>
+    <!-- AV（動画）拡張子 → avExtRe で除外、種別選択にも通常含まれない -->
+    <p><button type="button" class="fake-btn" onclick="return false;">プロモ動画.mp4</button></p>
+  </div>
+  <div id="log"></div>
+
+  <!-- ============================================================ -->
+  <h2>Tokio Marine SPS (u.tmnf.jp) 風 POST ダウンロード</h2>
+  <p>
+    認証必須の保険ポータルを模した構造。ファイルは小さなサムネイルだけが表示され、実バイトは ASP.NET MVC の
+    POST エンドポイント越しにあります。href が存在しないため通常のアンカー走査も Lv2 も拾えず、専用アダプタが
+    <code>postForm</code> 項目を組み立てて通常のダウンロード経路に流します（<code>addUrl(dlUrl, name, true, ext, anchor, postForm)</code>）。
+  </p>
+  <p>
+    指紋となる目印（ホストゲート不要）: スペルミスの <code>data-donwloadactionurl</code>、
+    <code>data-gfs-postactionhelper-*</code>、子 <code>img.asyncThumbnailData[th-data-fileId]</code>
+    （<code>th-data-fileType</code> 2=文書 / 1=画像、<code>th-data-extension</code>）、
+    人間可読名は兄弟の <code>.phInfoThumbnailComment[title]</code>、
+    反 CSRF トークンは <code>input[name="__RequestVerificationToken"]</code>。
+  </p>
+
+  <!-- ページ共通の anti-forgery トークン -->
+  <form onsubmit="return false;">
+    <input type="hidden" name="__RequestVerificationToken" value="GAF-MOCK-TOKEN-abc123">
+  </form>
+
+  <h3>文書: <code>a.download_btn[data-donwloadactionurl]</code> → attachmentId を POST</h3>
+  <div class="mock">
+    <div class="sps-row">
+      <a class="download_btn"
+         href="javascript:void(0)"
+         data-downloadid="DOC-0001"
+         data-donwloadactionurl="/ag/DetailData/Download"
+         onclick="spsClick(this); return false;">
+        <img class="asyncThumbnailData"
+             th-data-fileId="DOC-0001" th-data-fileType="2" th-data-extension=".pdf"
+             src="../files/sample.pdf" alt="thumb">
+      </a>
+      <span class="phInfoThumbnailComment" title="保険金請求書.pdf">保険金請求書.pdf</span>
+    </div>
+    <div class="sps-row">
+      <a class="download_btn"
+         href="javascript:void(0)"
+         data-downloadid="DOC-0002"
+         data-donwloadactionurl="/ag/DetailData/Download"
+         onclick="spsClick(this); return false;">
+        <img class="asyncThumbnailData"
+             th-data-fileId="DOC-0002" th-data-fileType="2" th-data-extension=".docx"
+             src="../files/sample.docx" alt="thumb">
+      </a>
+      <span class="phInfoThumbnailComment" title="事故状況報告.docx">事故状況報告.docx</span>
+    </div>
+  </div>
+
+  <h3>画像: <code>a.thumbnail_image[data-gfs-postactionhelper-openchildwindow-imageId]</code> → LargeImage/Index へ POST（inlineImage）</h3>
+  <div class="mock">
+    <div class="sps-row">
+      <a class="thumbnail_image"
+         href="javascript:void(0)"
+         data-gfs-postactionhelper-openchildwindow-imageId="IMG-0001"
+         data-gfs-postactionhelper-url="/ag/LargeImage/Index"
+         onclick="spsClick(this); return false;">
+        <img class="asyncThumbnailData"
+             th-data-fileId="IMG-0001" th-data-fileType="1" th-data-extension=".jpg"
+             src="../files/sample.jpg" alt="thumb">
+      </a>
+      <span class="phInfoThumbnailComment" title="損傷部位写真.jpg">損傷部位写真.jpg</span>
+    </div>
+  </div>
+
+  <div class="note">
+    アダプタの仕様メモ: 文書は <code>{name:"attachmentId", value:fileId}</code>（DOM 属性は <code>data-downloadid</code> だが
+    サーバの param は <code>attachmentId</code>）＋トークンを <code>application/x-www-form-urlencoded</code> で POST。
+    画像は直接バイト経路が無いため <code>/ag/LargeImage/Index</code> へ <code>imageId/direction/dispType/subCount</code>＋トークンを
+    POST し、返却 HTML 内の base64 <code>data:</code> URI を抽出する <code>postForm.inlineImage:true</code> 扱い。
+    全ファイルが同一エンドポイントへ POST するため、<code>addUrl</code> の URL 重複排除を避ける目的で
+    無害なクエリ <code>?_gafid=&lt;fileId&gt;</code> を付与して識別します。
+  </div>
+
+  <!-- ============================================================ -->
+  <h2>期待される検出</h2>
+  <div class="note">
+    <strong>検出されるべき（クリック前 = Scan 時点では「クリック候補」として一覧化）:</strong><br>
+    ・シグナル(1) の3件 ＝ <code>決算報告.pdf</code> / <code>見積書.xlsx</code> / <code>議事録2026.docx</code>
+      （<code>activeCaptureTrigger</code> センチネル、行バッジ「取得」）。<br>
+    ・シグナル(2) の3件 ＝ <code>製品カタログ2026.pdf</code> / <code>価格表.xlsx</code> / <code>会社案内.pptx</code>
+      （操作要素 + 同行のファイル名から1行1件で集約）。<br>
+    ・SPS 文書 2件 ＝ <code>保険金請求書.pdf</code> / <code>事故状況報告.docx</code>（<code>postForm</code> 項目、行バッジ「POST」）。<br>
+    ・SPS 画像 1件 ＝ <code>損傷部位写真.jpg</code>（<code>postForm.inlineImage</code> 項目）。<br>
+    合計 <strong>9 件</strong>がクリック候補 / POST 項目として現れるのが正。<br><br>
+
+    <strong>クリック後（<code>ダウンロード</code> / <code>ZIP</code> / <code>結合</code> 実行時）に初めて起こること:</strong>
+    各トリガーが自動クリックされ、本モックでは <code>../files/sample.*</code> を fetch して取得します。
+    SPS 項目は <code>buildItemFetchInit</code> 相当の POST 再生で取得を試みます（本モックの POST は no-op なので実バイトは届かない場合があります。検出＝候補一覧化までを確認してください）。<br><br>
+
+    <strong>検出されてはならない:</strong><br>
+    ・「削除」ボタンの行（近くに <code>重要データ.pdf</code> があっても <code>MUTATE_RE</code> で除外）。<br>
+    ・「申請書.pdf を送信」ボタン（<code>送信</code> = MUTATE 語を含むため除外）。<br>
+    ・「プロモ動画.mp4」（AV 拡張子 = <code>avExtRe</code> で除外。種別選択にも通常含まれない）。<br>
+    ・本物の <code>href</code> を持つリンクが Lv2 トリガーとして二重検出されること（Lv2 は href 無し要素のみ対象）。<br><br>
+    <em>注意:</em> 拡張子付きテキストでも、その拡張子が<u>現在のスキャン種別選択に含まれていない</u>場合は
+    <code>filenameExtFromText</code> が空を返しトリガー化されません。pdf / xlsx / docx / pptx / jpg を有効にして確認してください。
+  </div>
+
+  <script>
+    // 無害なモック動作: ページ遷移せず、サンプルファイルを fetch するだけ（または no-op）。
+    function logLine(s) {
+      var el = document.getElementById('log');
+      if (el) el.textContent += s + "\n";
+    }
+    // Lv2 トリガーの「ページ自身のダウンロード」を模倣: fetch → ログのみ（実保存はしない）。
+    function acDownload(url, el) {
+      var name = (el && (el.getAttribute('data-filename') || el.getAttribute('data-doc'))) ||
+                 (el && el.textContent || '').trim() || url;
+      logLine('[ac] click → fetch ' + url + '  (' + name + ')');
+      try { fetch(url).then(function () { logLine('[ac] fetched ' + url); }).catch(function () {}); } catch (_) {}
+      return false;
+    }
+    // SPS のクリックも no-op（実 POST はサーバが無いので発行しない）。検出は DOM 構造のみで成立する。
+    function spsClick(el) {
+      var id = (el && (el.getAttribute('data-downloadid') ||
+                el.getAttribute('data-gfs-postactionhelper-openchildwindow-imageId'))) || '?';
+      logLine('[sps] click (no-op) fileId=' + id + ' — 実バイトは拡張機能の postForm 再生で取得');
+      return false;
+    }
+  </script>
+</div>
+</body>
+</html>

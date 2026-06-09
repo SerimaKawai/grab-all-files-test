@@ -73,6 +73,138 @@
       <!-- 具体的なラベルは「弱くない」ので合成されず、そのまま使用 -->
     </ul>
   </section>
+
+  <!-- ===== CASE D: 壊れた Office→PDF 書き出しの /Title が「文字としての16進文字列」===== -->
+  <h2>D. PDF hex /Title デコード</h2>
+  <div class="note">
+    対象: <code>lib/popup-utils.js</code> の <code>decodePdfHexText</code>（Shift_JIS / UTF-16 / UTF-8 を
+    判定してデコード）と <code>tidyPdfDocTitle</code>（「Microsoft Word - 」接頭辞＋元ドキュメント拡張子を除去）。
+    呼び出しは <code>popup.js</code> の <code>fetchOneMeta</code> 内 <code>safeTitleStr()</code>。<br>
+    壊れた Office→PDF 書き出しでは <code>/Title</code> が<strong>「角括弧つき16進文字列」そのもの</strong>
+    （例 <code>&lt;4D6963726F736F667420576F7264202D20…&gt;</code>）として保存されることがあり、
+    pdf-lib / pdf.js はこれをそのまま ASCII 文字列で返すため、デコードしないと
+    そのまま <code>&lt;4D69…&gt;</code> がタイトルとして混入する。
+  </div>
+  <section>
+    <ul class="files">
+      <li><a href="../files/sample-hextitle.pdf">PDF をダウンロード</a></li>
+    </ul>
+    <div class="note">
+      このファイルの <code>/Title</code> は、文字列リテラル
+      <code>&lt;FEFF004D006900630072006F0073006F0066007400200057006F007200640020002D002056FD8A9E002E0064006F00630078&gt;</code>
+      を保持している。これは UTF-16BE（先頭 <code>FEFF</code> = BOM）で
+      <strong>「Microsoft Word - 国語.docx」</strong>をエンコードした16進バイト列。<br>
+      <code>decodePdfHexText</code> が BOM を見て UTF-16BE としてデコード →
+      <code>Microsoft Word - 国語.docx</code>、続いて <code>tidyPdfDocTitle</code> が
+      「Microsoft Word - 」接頭辞と「.docx」拡張子を除去 → <strong>国語</strong> になる。
+    </div>
+  </section>
+
+  <!-- ===== CASE E: 種別/科目が「列ヘッダ(th)」側にあり、行セルには無い ===== -->
+  <h2>E. 列ヘッダ科目（種別は列、行ではない）</h2>
+  <div class="note">
+    対象: <code>lib/popup-utils.js</code> の <code>gafColumnSubjectWord</code>（リンクのセルを覆う
+    列ヘッダ <code>th</code> の文字列を読み、<code>GAF_SUBJECT_WORDS</code> に一致すれば科目として採用。
+    セル単位で都度評価＝キャッシュしない）。CASE A は科目が<strong>行セル</strong>にあるのに対し、
+    ここでは科目が<strong>列ヘッダ</strong>にある対照ケース。<br>
+    各列の科目（英語 / 数学 / 理科）は列見出しに置き、行見出し（<code>th</code>）に種別（問題 / 解答）を置く。
+    <code>composeContextualName</code> は <code>rowSubj</code> が無いとき
+    <code>gafColumnSubjectWord(el)</code> で列ヘッダ科目を補完し、
+    種別は行内の <code>[問題PDF]/[解答PDF]</code> アンカー（<code>gafBlockHasTypeAnchor</code>）で発火する。
+  </div>
+  <section>
+    <h2>桜蔭中学校</h2>
+    <h3>2026年度</h3>
+    <table class="kako">
+      <thead>
+        <tr><th class="subj">種別＼科目</th><th class="subj">英語</th><th class="subj">数学</th><th class="subj">理科</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th class="subj">問題</th>
+          <td><a href="../files/sample-1.pdf">問題PDF</a></td>
+          <td><a href="../files/sample-2.pdf">問題PDF</a></td>
+          <td><a href="../files/sample.pdf">問題PDF</a></td>
+        </tr>
+        <tr>
+          <th class="subj">解答</th>
+          <td><a href="../files/sample.docx">解答PDF</a></td>
+          <td><a href="../files/sample.xlsx">解答PDF</a></td>
+          <td><a href="../files/sample.pptx">解答PDF</a></td>
+        </tr>
+      </tbody>
+    </table>
+    <!-- 期待: 桜蔭中学校_2026_英語_問題 / 桜蔭中学校_2026_数学_問題 / 桜蔭中学校_2026_理科_問題
+              桜蔭中学校_2026_英語_解答 / 桜蔭中学校_2026_数学_解答 / 桜蔭中学校_2026_理科_解答
+         （科目は列ヘッダから、種別はリンク自身のラベル「問題PDF/解答PDF」から） -->
+  </section>
+
+  <!-- ===== CASE F: 科目/種別/年 が URL パスから復元できる ===== -->
+  <h2>F. URL からの科目/種別/年 復元</h2>
+  <div class="note">
+    対象: <code>lib/popup-utils.js</code> の <code>gafUrlExamTokens</code>（URL パスの romaji exam slug
+    <code>kokugo=国語</code> / <code>mondai=問題</code> 等から科目・種別・年を復元。
+    <strong>同一ステムが科目と種別を両方含むとき(paired)のみ</strong>採用＝<code>kokugo-mondai</code>）。
+    呼び出しは <code>composeContextualName</code> で、行に種別ラベル
+    <code>[問題PDF]/[解答PDF]</code>（<code>gafBlockHasTypeAnchor</code>）があり、かつ
+    h3 から年が取れて種別ゲートを通過したあとに、URL トークンが科目を<strong>補完</strong>する。
+  </div>
+  <section>
+    <h2>女子学院中学校</h2>
+    <h3>2025年度</h3>
+    <ul class="files">
+      <li><a href="../files/kokugo-mondai.pdf">問題PDF</a></li>
+      <li><a href="../files/kokugo-mondai.pdf">解答PDF</a></li>
+    </ul>
+    <!-- 期待: 女子学院中学校_2025_国語_問題 / 女子学院中学校_2025_国語_解答
+         科目「国語」は本文に無く、URL パスの kokugo（kokugo-mondai が paired）から復元される。
+         種別「問題/解答」はリンク自身のラベルから（isType=true）。 -->
+    <div class="note">
+      <strong>重要（URL は単独では絶対に発火しない）:</strong>
+      <code>gafUrlExamTokens</code> が返す科目/種別/年は、DOM 側の種別シグナル
+      （ラベルの 問題/解答 = <code>isType</code>、補強された列ヘッダ種別 = <code>effHeaderType</code>、
+      または行内の種別アンカー = <code>gafBlockHasTypeAnchor</code>）が先に種別ゲートを通過した
+      場合にのみ<strong>補強(enrich)</strong>として使われる。<br>
+      <code>composeContextualName</code> では <code>if (!isType &amp;&amp; !effHeaderType &amp;&amp; !hasTypeAnchor) return "";</code>
+      が URL 評価の<strong>前</strong>に種別ゲートとして効くため、種別の DOM 証拠が無い純粋な
+      <code>../files/suugaku-mondai.pdf</code> 等は、たとえ paired slug を持っていても合成されない。
+      これは日本語教育サイト全域での過剰発火を避けるための設計（adversarial review で URL 単独発火は3度撤去）。
+    </div>
+  </section>
+
+  <!-- ===== F の否定（URL 単独では発火しない確認） ===== -->
+  <h2>F-否定. URL だけでは合成しない</h2>
+  <section>
+    <p>
+      次のリンクは paired な URL slug（<code>suugaku-mondai</code> = 数学＋問題）を持つが、
+      ラベルは汎用「PDF」で、周囲に種別ラベルアンカーも列ヘッダ種別も無いため
+      <strong>合成されない</strong>（種別ゲート未通過）。
+    </p>
+    <p>参考リンク: <a href="../files/kokugo-mondai.pdf">PDF</a>（一覧構造の外・種別証拠なし → そのまま「PDF」）</p>
+    <!-- 期待: 合成なし。ラベル「PDF」のまま（URL 単独発火しないことの確認）。 -->
+  </section>
+
+  <!-- ===== 期待される検出（人手 Scan 確認用サマリ） ===== -->
+  <h2>期待される検出</h2>
+  <div class="note">
+    <strong>検出されるべき（合成名 or デコード後タイトル）:</strong>
+    <ul class="files">
+      <li>A: 開成中学校_2026_国語_問題 ほか各行（既存）</li>
+      <li>B: 麻布中学校_2025_算数 / 麻布中学校_2025_英語（既存・種別なし）</li>
+      <li>D: <code>sample-hextitle.pdf</code> のタイトルが <strong>国語</strong>（hex /Title を decode＋tidy）</li>
+      <li>E: 桜蔭中学校_2026_英語_問題 / _数学_問題 / _理科_問題 / _英語_解答 / _数学_解答 / _理科_解答
+          （科目=列ヘッダ <code>th</code>、種別=リンクラベル）</li>
+      <li>F: 女子学院中学校_2025_国語_問題 / 女子学院中学校_2025_国語_解答
+          （科目=URL の kokugo を paired 補強、種別=ラベル）</li>
+    </ul>
+    <strong>検出されても合成されないべき（ラベルのまま）:</strong>
+    <ul class="files">
+      <li>C: 「資料PDF」「2024年度入学試験要項」はそのまま</li>
+      <li>F-否定: paired slug があっても種別 DOM 証拠が無ければ「PDF」のまま（URL は単独発火しない）</li>
+    </ul>
+    各 PDF/Office ファイル自体は通常どおり検出される。確認は「タイトル」列、または
+    「タイトルでリネーム」ON でのダウンロード名で行う。
+  </div>
 </div>
 </body>
 </html>

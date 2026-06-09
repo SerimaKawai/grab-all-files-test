@@ -4,28 +4,58 @@
 <meta charset="utf-8">
 <meta name="robots" content="noindex,nofollow">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>13. 動画 / 音声 / SVG / 短縮 data-* — Grab All Files テスト</title>
+<title>13. 直リンク動画 / 動画・音声要素 / SVG / 短縮 data-* — Grab All Files テスト</title>
 <link rel="stylesheet" href="../assets/style.css">
 </head>
 <body>
 <div class="wrap">
-  <header class="site"><h1>13. 動画 / 音声 / SVG / 短縮 data-*</h1></header>
+  <header class="site"><h1>13. 直リンク動画 / 動画・音声要素 / SVG / 短縮 data-*</h1></header>
   <nav class="top"><a href="../index.html">← トップ</a></nav>
 
   <div class="note">
-    2026-05-06 追加機能の検証フィクスチャ。<code>&lt;video&gt;</code> / <code>&lt;audio&gt;</code> /
-    <code>&lt;source&gt;</code> / <code>&lt;track&gt;</code> / SVG <code>&lt;image&gt;</code> /
-    <code>&lt;use&gt;</code> と、画像系 data-* 短縮形 10 種、メディア系 data-* 3 種をカバーします。
-    <strong>期待検出ユニーク URL: 14 件</strong>（同一ファイルを複数経路で参照しているので重複排除後の件数）。
-    <strong>除外確認</strong>: <code>&lt;use href="#inline-sprite"&gt;</code> のインライン #fragment 参照は検出されないこと。
+    <strong>2026-06-09 改訂。</strong>v4.5.x で「<strong>直リンク動画</strong>」が検出対象に追加されました。
+    検出ロジックは <code>lib/file-utils.js</code> の <code>knownExtRe</code>（mp4/m4v/mov/webm/avi/mkv/wmv/flv/f4v/mpeg/mpg/m2v/3gp/3g2/ogv/divx/asf/rm/rmvb/vob を収録）と、
+    <code>popup.js</code> の scanFunc <code>addUrl</code> / <code>extInPath</code>、表示ゲート <code>shouldKeepScannedItem</code>（scanTypeGroups の <code>video</code> グループ）にあります。
+    <br>
+    <strong>重要な仕様（要確認）</strong>:
+    動画はあくまで <code>&lt;a href="x.mp4"&gt;</code> や URL 末尾が動画拡張子の<strong>直リンクのみ</strong>検出されます。
+    <code>popup.js</code> の <code>deepQuery("video, audio")</code> ループは
+    <strong>poster（画像）と <code>&lt;track&gt;</code>（字幕）だけ</strong>を収集し、
+    <code>&lt;video src&gt;</code> や <code>&lt;source src&gt;</code> 自体、
+    <code>&lt;audio&gt;</code> の音声本体は<strong>収集しません</strong>。
+    ストリーミング（HLS <code>.m3u8</code> / DASH <code>.mpd</code> / <code>.ts</code> / <code>.m4s</code>）と
+    全音声、blob/傍受メディアは <code>avExtRe</code>（<code>lib/file-utils.js</code> / <code>content.js</code> ネットワーク経路ガード / <code>page-interceptor.js</code>）で恒久ブロックされます。
+    <br>
+    <strong>期待検出ユニーク URL: 16 件</strong>（同一ファイルを複数経路で参照しているので重複排除後の件数）。
   </div>
 
-  <h2>① &lt;video&gt; 要素（src / source / track / poster）</h2>
+  <h2>① 直リンク動画（v4.5.x で対応） — 検出される</h2>
+  <p><code>&lt;a href="x.mp4"&gt;</code> 形式の直リンク、または URL 末尾が動画拡張子のもの。
+     これらは <code>knownExtRe</code> にマッチし、<code>video</code> スキャングループ（デフォルト ON）で表示されます。
+     <strong>すべて検出されます。</strong></p>
   <ul class="files">
-    <li><strong>video[src] 直接参照</strong>:
+    <li><a href="../files/sample.mp4">講義録画 (sample.mp4)</a></li>
+    <li><a href="../files/sample.mov">プロモ動画 (sample.mov)</a></li>
+    <li><a href="../files/sample.mkv">アーカイブ動画 (sample.mkv)</a></li>
+    <li><a href="../files/sample.webm">Web 動画 (sample.webm)</a></li>
+    <li><a href="../files/sample.avi">旧形式動画 (sample.avi)</a></li>
+    <li><a href="../files/sample.wmv">Windows Media (sample.wmv)</a></li>
+    <li><a href="../files/sample.flv">Flash 動画 (sample.flv)</a></li>
+    <li><a href="../files/sample.m4v">iTunes 動画 (sample.m4v)</a></li>
+    <li><a href="../files/sample.mpeg">MPEG 動画 (sample.mpeg)</a></li>
+    <li><a href="../files/sample.3gp">モバイル動画 (sample.3gp)</a></li>
+  </ul>
+
+  <h2>② &lt;video&gt; 要素（src / source / track / poster）</h2>
+  <p><strong>仕様</strong>: <code>&lt;video src&gt;</code> と各 <code>&lt;source src&gt;</code> は
+     <strong>収集されません</strong>（動画本体は直リンクのみ対象）。
+     収集されるのは <code>poster</code>（画像）と <code>&lt;track&gt;</code>（字幕）だけです。</p>
+  <ul class="files">
+    <li><strong>video[src] 直接参照</strong>（<em>検出されない</em>）:
       <video src="../files/sample.mp4" controls width="160" preload="none"></video>
     </li>
-    <li><strong>video + 複数 source（mp4 / webm / ogv）+ track 字幕 + poster</strong>:
+    <li><strong>video + 複数 source（mp4 / webm / ogv）</strong>（<em>source は検出されない</em>）
+        <strong>+ track 字幕（検出される）</strong> <strong>+ poster（検出される）</strong>:
       <video controls poster="../files/sample.png" width="160" preload="none">
         <source src="../files/sample.mp4" type="video/mp4">
         <source src="../files/sample.webm" type="video/webm">
@@ -34,13 +64,19 @@
       </video>
     </li>
   </ul>
+  <p class="note">注: <code>sample.mp4</code> / <code>sample.webm</code> は①の直リンクで既に検出済みです。
+     ②の <code>&lt;source&gt;</code> 経路では新たに検出されません。<code>sample.ogv</code> は直リンクが無いため
+     （<code>&lt;source&gt;</code> でしか参照されない）<strong>検出されません</strong>。</p>
 
-  <h2>② &lt;audio&gt; 要素（src / source 5 MIME）</h2>
+  <h2>③ &lt;audio&gt; 要素（src / source 5 MIME） — すべて検出されない</h2>
+  <p><strong>仕様</strong>: <code>&lt;audio&gt;</code> 要素は本体 src も <code>&lt;source&gt;</code> も収集しません。
+     poster も付きません（poster は video 専用）。音声拡張子は <code>knownExtRe</code> に無く、
+     <code>avExtRe</code> でもブロックされるため<strong>一切検出されません</strong>。</p>
   <ul class="files">
-    <li><strong>audio[src] 直接参照</strong>:
+    <li><strong>audio[src] 直接参照</strong>（<em>検出されない</em>）:
       <audio src="../files/sample.mp3" controls preload="none"></audio>
     </li>
-    <li><strong>audio + 複数 source（mp3 / ogg / wav / m4a / flac）</strong>:
+    <li><strong>audio + 複数 source（mp3 / ogg / wav / m4a / flac）</strong>（<em>すべて検出されない</em>）:
       <audio controls preload="none">
         <source src="../files/sample.mp3" type="audio/mpeg">
         <source src="../files/sample.ogg" type="audio/ogg">
@@ -51,7 +87,7 @@
     </li>
   </ul>
 
-  <h2>③ SVG &lt;image&gt; / &lt;use&gt; 外部参照</h2>
+  <h2>④ SVG &lt;image&gt; / &lt;use&gt; 外部参照</h2>
   <p>外部 SVG への参照（modern <code>href</code> と legacy <code>xlink:href</code> 両方）。
      <code>&lt;use href="#inline-sprite"&gt;</code> は同一ドキュメント内 fragment なので<strong>検出されません</strong>。</p>
   <svg width="240" height="80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -64,7 +100,8 @@
     <use href="#inline-sprite" x="210" y="20"/>
   </svg>
 
-  <h2>④ 画像系 data-* 短縮形（10種）</h2>
+  <h2>⑤ 画像系 data-* 短縮形（10種） — すべて検出される</h2>
+  <p><code>popup.js</code> の data-* 画像ローダー（<code>addImg</code>）が拾います。値の実拡張子で type hint を付与します。</p>
   <ul class="files">
     <li><div class="card" data-poster="../files/sample.jpg">data-poster</div></li>
     <li><div class="card" data-pic="../files/sample.png">data-pic</div></li>
@@ -78,29 +115,63 @@
     <li><div class="card" data-avatar="../files/sample.png">data-avatar</div></li>
   </ul>
 
-  <h2>⑤ メディア系 data-* （3種）</h2>
+  <h2>⑥ メディア系 data-*（3種）</h2>
+  <p><strong>仕様</strong>: <code>data-mp4</code> / <code>data-webm</code> は値が動画拡張子で終わるため
+     <code>extInPath</code> で <strong>検出されます</strong>（<code>video</code> グループ）。
+     <code>data-mp3</code> は <code>knownExtRe</code> に無く <code>avExtRe</code> でもブロックされるため
+     <strong>検出されません</strong>。</p>
   <ul class="files">
-    <li><div class="card" data-mp4="../files/sample.mp4">data-mp4</div></li>
-    <li><div class="card" data-webm="../files/sample.webm">data-webm</div></li>
-    <li><div class="card" data-mp3="../files/sample.mp3">data-mp3</div></li>
+    <li><div class="card" data-mp4="../files/sample.mp4">data-mp4（検出される）</div></li>
+    <li><div class="card" data-webm="../files/sample.webm">data-webm（検出される）</div></li>
+    <li><div class="card" data-mp3="../files/sample.mp3">data-mp3（検出されない）</div></li>
   </ul>
 
-  <h2>期待される検出（重複排除後 14 ユニーク URL）</h2>
+  <h2>⑦ 検出されない動画 / 音声（avExtRe による恒久ブロック）</h2>
+  <p>以下は直リンク <code>&lt;a href&gt;</code> として置いても、<code>avExtRe</code>
+     （<code>lib/file-utils.js</code> / <code>content.js</code> ネットワーク経路ガード / <code>page-interceptor.js</code>）で
+     ブロックされ<strong>結果に現れてはいけません</strong>。ストリーミングは絶対に対応しません。</p>
+  <ul class="files">
+    <li><a href="../files/playlist.m3u8">HLS プレイリスト (playlist.m3u8) — 検出されない</a></li>
+    <li><a href="../files/manifest.mpd">DASH マニフェスト (manifest.mpd) — 検出されない</a></li>
+    <li><a href="../files/segment.ts">セグメント (segment.ts) — 検出されない（TypeScript 衝突回避でも除外）</a></li>
+    <li><a href="blob:https://example.com/0d6c1f2a-video">blob: 動画 — 検出されない</a></li>
+    <li><a href="../files/sample.mp3">音声直リンク (sample.mp3) — 検出されない</a></li>
+    <li><a href="../files/sample.wav">音声直リンク (sample.wav) — 検出されない</a></li>
+    <li><a href="../files/sample.ogg">音声直リンク (sample.ogg) — 検出されない</a></li>
+    <li><a href="../files/sample.m4a">音声直リンク (sample.m4a) — 検出されない</a></li>
+    <li><a href="../files/sample.flac">音声直リンク (sample.flac) — 検出されない</a></li>
+  </ul>
+
+  <h2>期待される検出（重複排除後 16 ユニーク URL）</h2>
+  <p>下記がスキャン結果に出るべき URL です（<code>video</code> / 画像 / <code>subtitles</code> グループはデフォルト ON 前提）。</p>
   <ul>
-    <li><code>sample.mp4</code> — video[src] + video&gt;source + data-mp4 の 3 経路</li>
-    <li><code>sample.webm</code> — video&gt;source + data-webm</li>
-    <li><code>sample.ogv</code> — video&gt;source</li>
-    <li><code>sample.vtt</code> — video&gt;track</li>
-    <li><code>sample.mp3</code> — audio[src] + audio&gt;source + data-mp3</li>
-    <li><code>sample.ogg</code> — audio&gt;source（音声）</li>
-    <li><code>sample.wav</code> — audio&gt;source</li>
-    <li><code>sample.m4a</code> — audio&gt;source</li>
-    <li><code>sample.flac</code> — audio&gt;source</li>
-    <li><code>sample.svg</code> — SVG image[href] + SVG use[href] + data-icon</li>
-    <li><code>sample.svgz</code> — SVG image[xlink:href] + SVG use[xlink:href]</li>
-    <li><code>sample.png</code> — video[poster] + data-pic + data-cover-image + data-banner + data-avatar</li>
-    <li><code>sample.jpg</code> — data-poster + data-photo + data-srcset + data-hero</li>
-    <li><code>sample.webp</code> — data-cover</li>
+    <li><code>sample.mp4</code> — ①直リンク + ⑥data-mp4（②の video&gt;source 経路では検出されない）</li>
+    <li><code>sample.mov</code> — ①直リンク</li>
+    <li><code>sample.mkv</code> — ①直リンク</li>
+    <li><code>sample.webm</code> — ①直リンク + ⑥data-webm（②の video&gt;source 経路では検出されない）</li>
+    <li><code>sample.avi</code> — ①直リンク</li>
+    <li><code>sample.wmv</code> — ①直リンク</li>
+    <li><code>sample.flv</code> — ①直リンク</li>
+    <li><code>sample.m4v</code> — ①直リンク</li>
+    <li><code>sample.mpeg</code> — ①直リンク</li>
+    <li><code>sample.3gp</code> — ①直リンク</li>
+    <li><code>sample.png</code> — ②video[poster] + ⑤data-pic + data-cover-image + data-banner + data-avatar</li>
+    <li><code>sample.vtt</code> — ②video&gt;track（字幕）</li>
+    <li><code>sample.svg</code> — ④SVG image[href] + ④SVG use[href] + ⑤data-icon</li>
+    <li><code>sample.svgz</code> — ④SVG image[xlink:href] + ④SVG use[xlink:href]</li>
+    <li><code>sample.jpg</code> — ⑤data-poster + data-photo + data-srcset + data-hero</li>
+    <li><code>sample.webp</code> — ⑤data-cover</li>
+  </ul>
+
+  <h2>検出されてはいけないもの</h2>
+  <ul>
+    <li><code>&lt;video src&gt;</code> / <code>&lt;source src&gt;</code> の動画本体（②）— poster と track のみ収集</li>
+    <li><code>sample.ogv</code> — ②の <code>&lt;source&gt;</code> でしか参照されず、直リンクが無いため検出されない</li>
+    <li><code>&lt;audio&gt;</code> 本体 src・<code>&lt;source&gt;</code>（③）と、⑦の音声直リンク
+        <code>sample.mp3</code> / <code>sample.wav</code> / <code>sample.ogg</code> / <code>sample.m4a</code> / <code>sample.flac</code></li>
+    <li><code>data-mp3</code>（⑥）</li>
+    <li>HLS <code>playlist.m3u8</code> / DASH <code>manifest.mpd</code> / <code>segment.ts</code> / blob: 動画（⑦）</li>
+    <li><code>&lt;use href="#inline-sprite"&gt;</code> のインライン #fragment 参照（④）</li>
   </ul>
 </div>
 </body>

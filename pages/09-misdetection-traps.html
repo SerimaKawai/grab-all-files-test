@@ -44,6 +44,51 @@
     <li><a href="chrome://extensions/">chrome://extensions/</a></li>
     <li><a href="about:blank">about:blank</a></li>
   </ul>
+
+  <h2>セッション破壊リンク（クロールが踏んではいけない）</h2>
+  <div class="note">
+    <code>popup.js</code> の <code>crawlUrl</code> 内 <code>isSessionMutatingLink(parsed, text)</code> は、
+    認証付き GET（<code>credentials:"include"</code>）で踏むとユーザーをサインアウトさせてしまうリンクを
+    クロール対象から除外します（Coursebase の Angular SPA、Liferay の <code>/c/portal/logout</code> で報告）。
+    サインアウトすると取得済みのダウンロード URL まで失効し、再読み込みまでファイルが取れなくなるため、
+    <strong>これらは結果一覧に出してはならず、ディープスキャンでクロールしてもいけません</strong>。<br>
+    判定は 2 系統。<br>
+    (1) URL の <code>pathname + search</code>（小文字化）に対する正規表現
+    <code>/(?:^|[/?#&amp;=._-])(?:log|sign)[-_]?(?:out|off)(?:$|[/?#&amp;=.-])/</code> ＝
+    <code>logout</code> / <code>signout</code> / <code>logoff</code> / <code>signoff</code> および
+    <code>log-out</code> / <code>sign_out</code> などの区切り変種、
+    <code>?action=signout</code> のようなクエリ値も対象。<br>
+    (2) 可視リンクテキストに対する
+    <code>log out</code> / <code>sign out</code> / <code>log off</code> / <code>sign off</code>（空白・ハイフン任意）と
+    <code>ログアウト</code> / <code>サインアウト</code> / <code>ログオフ</code> / <code>サインオフ</code>。
+  </div>
+  <ul class="files">
+    <li><a href="/logout">ログアウト</a></li>
+    <li><a href="/account/sign_out">Sign out（/account/sign_out）</a></li>
+    <li><a href="/c/portal/logout">Liferay ログアウト（/c/portal/logout）</a></li>
+    <li><a href="?action=signout">Sign out（?action=signout クエリ）</a></li>
+    <li><a href="/users/sign-out">sign-out（ハイフン変種）</a></li>
+    <li><a href="/auth/logoff">logoff（log off 変種）</a></li>
+    <li><a href="/session/destroy">サインアウト</a></li>
+    <li><a href="/home">ログオフ</a></li>
+  </ul>
+  <div class="note">
+    最後の 2 件はパスに <code>logout</code> 系の語がなくても、可視テキスト（<code>サインアウト</code> /
+    <code>ログオフ</code>）でテキスト判定に引っかかり除外される例。逆に <code>/blog/out-and-about</code> や
+    <code>/design-out</code> のような無関係 URL は境界条件により誤マッチしない想定です。
+  </div>
+
+  <h2>期待される検出</h2>
+  <div class="note">
+    <strong>検出されてはならない（結果ゼロ・クロールもしない）:</strong>
+    本ページの全リンク。<br>
+    ・SourceForge / naturalearthdata / 「download」を含むナビ URL ＝ ナビゲーションページで実体ファイル無し。<br>
+    ・<code>chrome://</code> / <code>about:</code> ＝ スキャン不可スキーム。<br>
+    ・「セッション破壊リンク」節の 8 件 ＝ <code>isSessionMutatingLink</code> によりクロール enqueue から除外。
+    ディープスキャンでこれらがページキューに入ったり結果一覧に現れたら、
+    <code>isSessionMutatingLink</code> のリグレッションです。<br>
+    <strong>検出されるべき:</strong> なし（このページは誤検出トラップ専用で、ダウンロード対象の実ファイルは置いていません）。
+  </div>
 </div>
 </body>
 </html>

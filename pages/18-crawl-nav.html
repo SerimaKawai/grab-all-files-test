@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>18. クローラのナビ抽出（a href 以外） — Grab All Files テスト</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+  // ダミー関数。実際にクリックしてもページ遷移するだけで、検出には無関係。
+  // 拡張機能のクローラは onclick / javascript: の文字列から
+  //「パス形」のクォート済みリテラルを静的に抽出してフロンティアへ積む。
+  function goPage(u) { location.href = u; }
+</script>
+</head>
+<body>
+<div class="wrap">
+  <header class="site">
+    <h1>18. クローラのナビ抽出（<code>&lt;a href&gt;</code> 以外）</h1>
+    <p>深度 1 以上のクロールで、素の <code>&lt;a href&gt;</code> 以外のナビゲーション
+       （<code>javascript:</code> / <code>onclick</code> / アイコンクラス付き拡張子なしリンク /
+       サーバスクリプト <code>.php</code> リンク）から子ページを辿り、その先の PDF を検出できるかのテスト。</p>
+  </header>
+  <nav class="top"><a href="../index.html">← トップ</a></nav>
+
+  <div class="note">
+    <strong>対象コード:</strong> <code>popup.js</code> の <code>fetchAndParse</code>（クロール時のページ解析）と
+    <code>crawlUrl</code>（フロンティア管理）。
+    <ul>
+      <li><code>jsUrlLiteralRe</code> + <code>routeJsCandidate</code>：
+        <code>a[href^="javascript:"]</code> / <code>[onclick]</code> の文字列から
+        パス形のクォート済みリテラルを抽出し、ファイル形なら <code>addFileUrl</code>、
+        それ以外はクロールリンク候補として <code>links</code> に積む（zocbo.com 由来）。</li>
+      <li><code>crawlFileExtRe</code> のサーバスクリプト除外
+        （<code>php|phtml|asp|aspx|jsp|jspx|jspa|cfm|cgi|do|action|ashx|axd|svc|mvc</code>）：
+        <code>classes.php?id=N</code> のようなリンクは「ファイル」ではなく
+        「次ページへのルート」として<strong>フロンティアに積まれる（drop されない）</strong>
+        （yotsuyaotsuka chugaku_kakomon 由来）。</li>
+      <li><code>detectIconTypeHint</code> + <code>icon-pdf</code>：
+        拡張子のない <code>&lt;a class="icon-pdf" href=".../question/"&gt;問題PDF&lt;/a&gt;</code> は
+        アイコンクラスの type ヒントで PDF とみなす（toshin new_kakomon_db 由来）。</li>
+    </ul>
+  </div>
+
+  <div class="note">
+    <strong>確認方法:</strong> 拡張機能でこのページを <strong>クロール深度 1 以上</strong>（ディープスキャン）で Scan してください。<br>
+    深度 0（このページのみ）では、このハブ自身が直接持つファイルのみが検出されます（下記「このページ直下のファイル」）。<br>
+    深度 1 で、下の各ナビ（JS / onclick / icon-pdf / .php相当）が指す子ページに到達し、
+    そこにある <code>../../files/*.pdf</code> が検出されます。
+  </div>
+
+  <!-- ===== このハブ自身のファイル（深度 0 で検出される） ===== -->
+  <h2>このページ直下のファイル（深度 0）</h2>
+  <ul class="files">
+    <li><a href="../files/sample.pdf">sample.pdf（ハブ直下・素の a href）</a></li>
+  </ul>
+  <p class="note">↑ これは普通の <code>&lt;a href&gt;</code> なので深度 0 でも検出される。以下のナビは深度 1 以上で辿られる。</p>
+
+  <!-- ===== CASE A: javascript: スキームの href ===== -->
+  <h2>A. <code>javascript:</code> スキームの href</h2>
+  <p>
+    <a href="javascript:goPage('crawl/js-target.html')">→ JS ターゲットページ（問題一覧）</a>
+  </p>
+  <p class="note">
+    href は <code>javascript:goPage('crawl/js-target.html')</code>。素の href としては辿れないが、
+    <code>jsUrlLiteralRe</code> がクォート内の <code>'crawl/js-target.html'</code>（パス形・<code>.html</code>）を抽出し、
+    クロールリンク候補にする。→ 子ページの <code>crawl/js-target.html</code> が深度 1 で解析される。
+  </p>
+
+  <!-- ===== CASE B: onclick ハンドラ ===== -->
+  <h2>B. <code>onclick</code> ハンドラ（href="#"）</h2>
+  <p>
+    <a href="#" onclick="location.href='crawl/onclick-target.html'; return false;">→ onclick ターゲットページ（解答一覧）</a>
+  </p>
+  <p class="note">
+    href は <code>#</code>（自分自身）だが、<code>onclick</code> 文字列の中の
+    <code>'crawl/onclick-target.html'</code> を <code>jsUrlLiteralRe</code> が抽出 → クロールリンク候補。
+    → 子ページの <code>crawl/onclick-target.html</code> が深度 1 で解析される。
+  </p>
+
+  <!-- ===== CASE C: アイコンクラス付き拡張子なしリンク（icon-pdf） ===== -->
+  <h2>C. 拡張子なし <code>icon-pdf</code> リンク（ディレクトリ）</h2>
+  <p>
+    <a class="icon-pdf" href="crawl/question/">問題PDF</a>
+  </p>
+  <p class="note">
+    href は <code>crawl/question/</code>（末尾スラッシュ・拡張子なし）。通常はナビリンクに見えるが、
+    <code>class="icon-pdf"</code> を <code>detectIconTypeHint</code> が読み、PDF とみなす。<br>
+    本テストサイトはこのディレクトリを <code>crawl/question/index.html</code> として配信し、
+    その中に実体 PDF へのリンクを置いている。GitHub Pages では <code>crawl/question/</code> が
+    <code>index.html</code> に解決され、そこから <code>../../files/sample-2.pdf</code> が辿れる。
+  </p>
+
+  <!-- ===== CASE D: サーバスクリプト .php ナビリンク ===== -->
+  <h2>D. サーバスクリプト <code>.php</code> ナビリンク</h2>
+  <p>
+    <a href="crawl/classes.php?id=1">学校別ページ（classes.php?id=1）</a>
+  </p>
+  <p>
+    <a href="crawl/classes.html?id=1">学校別ページ（classes.html?id=1・静的ホスト用の同等品）</a>
+  </p>
+  <div class="note">
+    <strong>.php についての注意（静的ホストの制約）:</strong>
+    <code>classes.php?id=1</code> は <code>crawlFileExtRe</code> のサーバスクリプト除外により
+    「ファイル」とは扱われず、<strong>クロールフロンティアに積まれる（drop されない）</strong>のが
+    正しい挙動。これは <code>php</code> が <code>allKnownExts</code> に含まれるため
+    かつては <code>classes.php</code> がファイル扱いされてクロールから落ち、学校ページに到達できなかった
+    回帰（yotsuyaotsuka）の修正点。<br>
+    ただし <strong>GitHub Pages は <code>.php</code> を実行・配信できない</strong>ため、
+    実機のライブ検証では <code>classes.php?id=1</code> 自体は 404 になり中身を解析できない。
+    そこで同じナビ構造を辿れるよう、<code>classes.html?id=1</code> を等価の到達可能ページとして併置している。
+    <code>.php</code> リンクは「クローラが enqueue する（落とさない）こと」を文書化するための例であり、
+    クエリ付き <code>.html</code> 版で実際の到達と PDF 検出を確認できる。
+  </div>
+
+  <!-- ===== 期待される検出 ===== -->
+  <h2>期待される検出</h2>
+  <div class="note">
+    <strong>深度 0（このページのみ）で検出されるべき:</strong>
+    <ul>
+      <li><code>../files/sample.pdf</code>（ハブ直下の素の <code>a href</code>）— 1 件のみ。</li>
+    </ul>
+    <strong>深度 0 で検出されては<em>ならない</em>もの:</strong>
+    <ul>
+      <li>A/B/C/D の子ページ内の PDF（深度 1 以上で初めて辿られる）。</li>
+    </ul>
+
+    <strong>深度 1（ディープスキャン）で追加検出されるべき:</strong>
+    <ul>
+      <li><code>crawl/js-target.html</code> 経由 → <code>../../files/sample-1.pdf</code>
+        （javascript: href から <code>jsUrlLiteralRe</code> で抽出）。</li>
+      <li><code>crawl/onclick-target.html</code> 経由 → <code>../../files/sample.docx</code>
+        （onclick から <code>jsUrlLiteralRe</code> で抽出）。docx は素の a href なので確実に検出。</li>
+      <li><code>crawl/question/</code>（= <code>crawl/question/index.html</code>）経由 → <code>../../files/sample-2.pdf</code>
+        （拡張子なし URL を <code>icon-pdf</code> の type ヒントで PDF とみなしページとして辿る）。</li>
+      <li><code>crawl/classes.html?id=1</code> 経由 → <code>../../files/sample.pdf</code>
+        （サーバスクリプト相当のナビが enqueue され到達。実機では .html 版で確認）。</li>
+    </ul>
+
+    <strong>挙動として確認したいこと（検出件数ではなく経路）:</strong>
+    <ul>
+      <li><code>javascript:</code> / <code>onclick</code> 内のクォート済みパス（A・B）がフロンティアに積まれること。</li>
+      <li><code>icon-pdf</code> の拡張子なし URL（C）が「ナビ」ではなく「PDF を持つページ」として辿られること。</li>
+      <li><code>classes.php?id=1</code>（D）が <code>crawlFileExtRe</code> でファイル扱いされず enqueue されること
+        （静的ホストでは 404 だが、enqueue されること自体が正しい。.html 版で到達を確認）。</li>
+    </ul>
+
+    <strong>検出されては<em>ならない</em>もの:</strong>
+    <ul>
+      <li><code>goPage</code> / <code>location.href</code> などの<strong>関数名やパス形でない引数</strong>
+        （<code>'#'</code> 等）はファイルにもクロールリンクにもならない。</li>
+    </ul>
+  </div>
+</div>
+</body>
+</html>

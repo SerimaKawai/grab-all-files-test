@@ -67,10 +67,10 @@ test-site/
 
 ## デプロイ構成
 
-このリポジトリ（`batch-file-downloader`、private）では GitHub Pages が有効化できないため、`test-site/` の中身を公開 sibling repo `SerimaTeddyBear/grab-all-files-test` にミラーし、そちらの Pages から配信します（販売サイト `SerimaTeddyBear/grab-all-files` と同じパターン）。
+このリポジトリ（`filescanner`、private）では GitHub Pages が有効化できないため、`test-site/` の中身を公開 sibling repo `SerimaTeddyBear/grab-all-files-test` にミラーし、そちらの Pages から配信します（販売サイト `SerimaTeddyBear/grab-all-files` と同じパターン）。
 
 ```
-batch-file-downloader (private)            grab-all-files-test (public)
+filescanner (private)                      grab-all-files-test (public)
 └─ test-site/             ──sync──▶        └─ (root)            ──Pages──▶  https://test.grab-all-files.app/
    ├─ index.html                              ├─ index.html
    ├─ pages/, files/, assets/                 ├─ pages/, files/, assets/

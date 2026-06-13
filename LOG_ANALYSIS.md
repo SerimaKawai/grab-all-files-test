@@ -163,7 +163,7 @@
 | `pages/10-all-extensions.html` | 214 | 全対応拡張子（直リンク動画含む） |
 | `pages/11-platform-mocks.html` | 12+ | Gmail/Yahoo/Outlook/Salesforce Experience Cloud |
 | `pages/12-pdfjs-viewer.html` | 30+ | PDF.js viewer URL パターン |
-| `pages/13-media-and-svg.html` | 16 | 直リンク動画（音声/HLS/blob は非検出）/ SVG / 短縮 data-* |
+| `pages/13-media-and-svg.html` | 22 | 直リンク動画＋音声（v4.5.3、HLS/DASH/blob は非検出）/ SVG / 短縮 data-* |
 | `pages/14-magic-bytes.html` | 6 | 拡張子ミスマッチ判定 |
 | `pages/15-css-scanning.html` | 12+ | image-set / border-image / list-style（@font-face・cursor・::before url は非検出）+ ::before 種別 |
 | `pages/16-contextual-naming.html` | 文脈 | 学校_年度_科目_種別 合成 / hex Title / 列ヘッダ / URL トークン |

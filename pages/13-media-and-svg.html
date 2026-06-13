@@ -23,14 +23,15 @@
     <strong>poster（画像）・<code>&lt;track&gt;</code>（字幕）・要素自身の <code>src</code>/<code>currentSrc</code>・<code>&lt;source src&gt;</code></strong> を収集します。
     ただし media src は <code>addUrl(src, alt, false, …)</code>（<code>guess=false</code>）→ <code>extInPath</code>/<code>extRe</code> ゲート経由なので、
     <strong>選択中の直リンク動画拡張子（mp4/webm/mov…）のみ通過</strong>します＝<code>&lt;a href="x.mp4"&gt;</code> と同じ境界。
-    <code>&lt;audio&gt;</code> の音声本体・<code>&lt;source&gt;</code> も同じく採取しますが、音声拡張子は <code>knownExtRe</code>・<code>video</code> グループのどちらにも無いため
-    <strong>extRe ゲートで脱落＝結果に出ません</strong>（挙動は従来通り「非検出」）。
-    ストリーミング（HLS <code>.m3u8</code> / DASH <code>.mpd</code> / <code>.m4s</code> / <code>.m2ts</code> / <code>.mts</code>）と
-    全音声、拡張子なし・blob/傍受メディアは extRe ゲートで脱落し、加えて <code>avExtRe</code>（<code>lib/file-utils.js</code> / <code>content.js</code> ネットワーク経路ガード / <code>page-interceptor.js</code>）でも恒久ブロックされます。
+    <code>&lt;audio&gt;</code> の音声本体・<code>&lt;source&gt;</code> も同じく採取します。<strong>v4.5.3（2026-06-13）で「直リンク音声」（mp3/m4a/wma…25種）が
+    <code>knownExtRe</code> ＋ scanTypeGroups の <code>audio</code> グループ（デフォルト ON）に追加された</strong>ため、これらの音声本体 src・<code>&lt;source src&gt;</code>・直リンク
+    <code>&lt;a href="x.mp3"&gt;</code> は <strong>extRe ゲートを通過して検出されます</strong>（<code>&lt;a href="x.mp4"&gt;</code> と同じ直リンク境界）。
+    一方、ストリーミング（HLS <code>.m3u8</code> / DASH <code>.mpd</code> / <code>.m4s</code> / <code>.m2ts</code> / <code>.mts</code>）と
+    拡張子なし・blob/傍受メディアは extRe ゲートで脱落し、加えて <code>avExtRe</code>（<code>lib/file-utils.js</code> / <code>content.js</code> ネットワーク経路ガード / <code>page-interceptor.js</code>）でも恒久ブロックされます（<code>avExtRe</code> は音声25種を据え置きのまま保持＝傍受/JSON/署名URL/blob 経路では音声も恒久ブロック。<strong>直リンク（DOM の <code>&lt;a&gt;</code>/<code>&lt;source&gt;</code>）だけが surface</strong>）。
     <br>
     ※ <code>.ts</code>（MPEG-TS セグメント）は<strong>否定テストに使えません</strong>。<code>ts</code> は TypeScript と拡張子が衝突し、<code>web</code> スキャングループ（デフォルト ON）の対象なので直リンクは検出されます。ストリーミングの否定確認には <code>avExtRe</code> が確実にブロックする <code>.m4s</code> を使います。
     <br>
-    <strong>期待検出ユニーク URL: 17 件</strong>（同一ファイルを複数経路で参照しているので重複排除後の件数。2026-06-13 に <code>sample.ogv</code> が ② の <code>&lt;source&gt;</code> 経路で拾えるようになり 16→17）。
+    <strong>期待検出ユニーク URL: 22 件</strong>（同一ファイルを複数経路で参照しているので重複排除後の件数。2026-06-13 に <code>sample.ogv</code> が ② の <code>&lt;source&gt;</code> 経路で拾えるようになり 16→17、さらに v4.5.3 で直リンク音声 5 種（mp3/ogg/wav/m4a/flac）が ③/⑥/⑦ 経路で検出されるようになり 17→22）。
   </div>
 
   <h2>① 直リンク動画（v4.5.x で対応） — 検出される</h2>
@@ -72,16 +73,16 @@
      <code>sample.ogv</code> は直リンクが無く②の <code>&lt;source&gt;</code> でしか参照されないが、
      ogv は <code>video</code> グループ収録のため <strong>②経路で新たに検出されます</strong>（16→17 の +1）。</p>
 
-  <h2>③ &lt;audio&gt; 要素（src / source 5 MIME） — すべて検出されない</h2>
-  <p><strong>仕様</strong>: <code>&lt;audio&gt;</code> の本体 src・<code>&lt;source&gt;</code> も②と同じく採取は試みますが、
-     音声拡張子（mp3/ogg/wav/m4a/flac）は <code>knownExtRe</code>・<code>video</code> グループのどちらにも無いため
-     <code>extInPath</code>/<code>extRe</code> ゲートで脱落し、加えて <code>avExtRe</code> でもブロックされるため<strong>一切検出されません</strong>。
-     poster も付きません（poster は video 専用）。</p>
+  <h2>③ &lt;audio&gt; 要素（src / source 5 MIME） — すべて検出される（v4.5.3〜）</h2>
+  <p><strong>仕様（2026-06-13 / v4.5.3 転換）</strong>: <code>&lt;audio&gt;</code> の本体 src・<code>&lt;source&gt;</code> も②と同じく採取し、
+     音声拡張子（mp3/ogg/wav/m4a/flac）は <code>knownExtRe</code> ＋ scanTypeGroups の <code>audio</code> グループ（デフォルト ON）に収録されたため
+     <code>extInPath</code>/<code>extRe</code> ゲートを<strong>通過して検出されます</strong>（直リンク境界。<code>avExtRe</code> は傍受/ネット経路のみブロックで DOM 直リンクは通す）。
+     poster は付きません（poster は video 専用）。</p>
   <ul class="files">
-    <li><strong>audio[src] 直接参照</strong>（<em>検出されない</em>）:
+    <li><strong>audio[src] 直接参照</strong>（<em>検出される</em>）:
       <audio src="../files/sample.mp3" controls preload="none"></audio>
     </li>
-    <li><strong>audio + 複数 source（mp3 / ogg / wav / m4a / flac）</strong>（<em>すべて検出されない</em>）:
+    <li><strong>audio + 複数 source（mp3 / ogg / wav / m4a / flac）</strong>（<em>すべて検出される</em>）:
       <audio controls preload="none">
         <source src="../files/sample.mp3" type="audio/mpeg">
         <source src="../files/sample.ogg" type="audio/ogg">
@@ -123,32 +124,38 @@
   <h2>⑥ メディア系 data-*（3種）</h2>
   <p><strong>仕様</strong>: <code>data-mp4</code> / <code>data-webm</code> は値が動画拡張子で終わるため
      <code>extInPath</code> で <strong>検出されます</strong>（<code>video</code> グループ）。
-     <code>data-mp3</code> は <code>knownExtRe</code> に無く <code>avExtRe</code> でもブロックされるため
-     <strong>検出されません</strong>。</p>
+     <code>data-mp3</code> も v4.5.3 で <code>mp3</code> が <code>audio</code> グループ＋<code>knownExtRe</code> に入ったため
+     <strong>検出されます</strong>（値 <code>sample.mp3</code> は ③/⑦ と同一 URL なので重複排除）。</p>
   <ul class="files">
     <li><div class="card" data-mp4="../files/sample.mp4">data-mp4（検出される）</div></li>
     <li><div class="card" data-webm="../files/sample.webm">data-webm（検出される）</div></li>
-    <li><div class="card" data-mp3="../files/sample.mp3">data-mp3（検出されない）</div></li>
+    <li><div class="card" data-mp3="../files/sample.mp3">data-mp3（検出される、v4.5.3〜）</div></li>
   </ul>
 
-  <h2>⑦ 検出されない動画 / 音声（avExtRe による恒久ブロック）</h2>
+  <h2>⑦-A 直リンク音声 &lt;a href&gt; — 検出される（v4.5.3〜）</h2>
+  <p>直リンク <code>&lt;a href="x.mp3"&gt;</code> の音声は、v4.5.3 で <code>audio</code> グループ（デフォルト ON）に入ったため
+     <strong>検出されます</strong>（③ の <code>&lt;audio&gt;</code>/<code>&lt;source&gt;</code> と同一 URL なので重複排除で 5 ユニーク）。</p>
+  <ul class="files">
+    <li><a href="../files/sample.mp3">音声直リンク (sample.mp3) — 検出される</a></li>
+    <li><a href="../files/sample.wav">音声直リンク (sample.wav) — 検出される</a></li>
+    <li><a href="../files/sample.ogg">音声直リンク (sample.ogg) — 検出される</a></li>
+    <li><a href="../files/sample.m4a">音声直リンク (sample.m4a) — 検出される</a></li>
+    <li><a href="../files/sample.flac">音声直リンク (sample.flac) — 検出される</a></li>
+  </ul>
+
+  <h2>⑦-B 検出されないストリーミング / blob（avExtRe による恒久ブロック）</h2>
   <p>以下は直リンク <code>&lt;a href&gt;</code> として置いても、<code>avExtRe</code>
      （<code>lib/file-utils.js</code> / <code>content.js</code> ネットワーク経路ガード / <code>page-interceptor.js</code>）で
-     ブロックされ<strong>結果に現れてはいけません</strong>。ストリーミングは絶対に対応しません。</p>
+     ブロックされ<strong>結果に現れてはいけません</strong>。ストリーミング（HLS/DASH）は絶対に対応しません。</p>
   <ul class="files">
     <li><a href="../files/playlist.m3u8">HLS プレイリスト (playlist.m3u8) — 検出されない</a></li>
     <li><a href="../files/manifest.mpd">DASH マニフェスト (manifest.mpd) — 検出されない</a></li>
     <li><a href="../files/segment.m4s">セグメント (segment.m4s) — 検出されない（avExtRe がブロック）</a></li>
     <li><a href="blob:https://example.com/0d6c1f2a-video">blob: 動画 — 検出されない</a></li>
-    <li><a href="../files/sample.mp3">音声直リンク (sample.mp3) — 検出されない</a></li>
-    <li><a href="../files/sample.wav">音声直リンク (sample.wav) — 検出されない</a></li>
-    <li><a href="../files/sample.ogg">音声直リンク (sample.ogg) — 検出されない</a></li>
-    <li><a href="../files/sample.m4a">音声直リンク (sample.m4a) — 検出されない</a></li>
-    <li><a href="../files/sample.flac">音声直リンク (sample.flac) — 検出されない</a></li>
   </ul>
 
-  <h2>期待される検出（重複排除後 17 ユニーク URL）</h2>
-  <p>下記がスキャン結果に出るべき URL です（<code>video</code> / 画像 / <code>subtitles</code> グループはデフォルト ON 前提）。</p>
+  <h2>期待される検出（重複排除後 22 ユニーク URL）</h2>
+  <p>下記がスキャン結果に出るべき URL です（<code>video</code> / <code>audio</code> / 画像 / <code>subtitles</code> グループはデフォルト ON 前提）。</p>
   <ul>
     <li><code>sample.mp4</code> — ①直リンク + ②video[src]/source + ⑥data-mp4（同一URLなので重複排除で1件）</li>
     <li><code>sample.mov</code> — ①直リンク</li>
@@ -167,15 +174,16 @@
     <li><code>sample.svgz</code> — ④SVG image[xlink:href] + ④SVG use[xlink:href]</li>
     <li><code>sample.jpg</code> — ⑤data-poster + data-photo + data-srcset + data-hero</li>
     <li><code>sample.webp</code> — ⑤data-cover</li>
+    <li><code>sample.mp3</code> — ③audio[src]/source + ⑥data-mp3 + ⑦-A 直リンク（同一URLなので重複排除で1件。<strong>v4.5.3 追加分</strong>）</li>
+    <li><code>sample.ogg</code> — ③audio&gt;source + ⑦-A 直リンク（<strong>v4.5.3 追加分</strong>）</li>
+    <li><code>sample.wav</code> — ③audio&gt;source + ⑦-A 直リンク（<strong>v4.5.3 追加分</strong>）</li>
+    <li><code>sample.m4a</code> — ③audio&gt;source + ⑦-A 直リンク（<strong>v4.5.3 追加分</strong>）</li>
+    <li><code>sample.flac</code> — ③audio&gt;source + ⑦-A 直リンク（<strong>v4.5.3 追加分</strong>）</li>
   </ul>
 
   <h2>検出されてはいけないもの</h2>
   <ul>
-    <li><code>&lt;audio&gt;</code> 本体 src・<code>&lt;source&gt;</code>（③）と、⑦の音声直リンク
-        <code>sample.mp3</code> / <code>sample.wav</code> / <code>sample.ogg</code> / <code>sample.m4a</code> / <code>sample.flac</code>
-        — 採取は試みるが音声拡張子は extRe ゲートで脱落（＋ avExtRe ブロック）</li>
-    <li><code>data-mp3</code>（⑥）</li>
-    <li>HLS <code>playlist.m3u8</code> / DASH <code>manifest.mpd</code> / <code>segment.m4s</code> / blob: 動画（⑦）— extRe 非該当＋ avExtRe ブロック</li>
+    <li>HLS <code>playlist.m3u8</code> / DASH <code>manifest.mpd</code> / <code>segment.m4s</code> / blob: 動画（⑦-B）— extRe 非該当＋ avExtRe ブロック（ストリーミングは恒久非対応）</li>
     <li><code>&lt;use href="#inline-sprite"&gt;</code> のインライン #fragment 参照（④）</li>
   </ul>
 </div>

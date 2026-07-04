@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>19. 分割アーカイブ連番 — Grab All Files テスト</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="site"><h1>19. 分割アーカイブ（マルチボリューム）連番</h1><p>大きなアーカイブを分割した連番ファイル（HJSplit / <code>split</code> / 7-Zip / WinRAR / WinZip）の検出。誤検出ゼロを守る2段構え。</p></header>
+  <nav class="top"><a href="../index.html">← トップ</a></nav>
+
+  <div class="note">
+    <strong>期待される検出件数:</strong> 上の「検出されるべき」セクションから <strong>合計 17 件</strong>（すべて圧縮ファイル系）。
+    下の「検出されてはいけない」セクションからは <strong>0 件</strong>（＝精度ガードが効いていることの確認）。
+    ポップアップから <strong>Scan</strong> を実行して突き合わせてください（保存先を選べば実ファイルのダウンロードまで確認できます）。
+  </div>
+
+  <h2>✅ 検出されるべき（17件）</h2>
+
+  <h3>数字だけの連番（HJSplit / <code>split</code>）— 同一ベースの連番系列のみ昇格</h3>
+  <ul class="files">
+    <li><a href="../files/split/backup.001">backup.001</a>（.001 始まり）</li>
+    <li><a href="../files/split/backup.002">backup.002</a></li>
+    <li><a href="../files/split/backup.003">backup.003</a></li>
+    <li><a href="../files/split/archive.000">archive.000</a>（.000 始まり）</li>
+    <li><a href="../files/split/archive.001">archive.001</a></li>
+  </ul>
+
+  <h3>埋め込み拡張子を残した連番（7-Zip / 分割zip）</h3>
+  <ul class="files">
+    <li><a href="../files/split/dataset.7z.001">dataset.7z.001</a>（7z として分類）</li>
+    <li><a href="../files/split/dataset.7z.002">dataset.7z.002</a></li>
+    <li><a href="../files/split/photos.zip.001">photos.zip.001</a>（zip として分類）</li>
+    <li><a href="../files/split/photos.zip.002">photos.zip.002</a></li>
+  </ul>
+
+  <h3>WinRAR 旧形式（<code>.rar</code> + <code>.r00</code>/<code>.r01</code>）</h3>
+  <ul class="files">
+    <li><a href="../files/split/game.rar">game.rar</a>（先頭ボリューム）</li>
+    <li><a href="../files/split/game.r00">game.r00</a>（高信頼・単独でも検出）</li>
+    <li><a href="../files/split/game.r01">game.r01</a></li>
+  </ul>
+
+  <h3>WinZip / <code>zip -s</code> 分割（<code>.zip</code> + <code>.z01</code>/<code>.z02</code>）</h3>
+  <ul class="files">
+    <li><a href="../files/split/docs.zip">docs.zip</a>（先頭ボリューム）</li>
+    <li><a href="../files/split/docs.z01">docs.z01</a>（高信頼・単独でも検出）</li>
+    <li><a href="../files/split/docs.z02">docs.z02</a></li>
+  </ul>
+
+  <h3>WinRAR 新形式（<code>.part1.rar</code> / <code>.part2.rar</code>）</h3>
+  <ul class="files">
+    <li><a href="../files/split/bundle.part1.rar">bundle.part1.rar</a>（.rar 直で検出）</li>
+    <li><a href="../files/split/bundle.part2.rar">bundle.part2.rar</a></li>
+  </ul>
+
+  <h2>🚫 検出されてはいけない（精度ガードの確認・0件）</h2>
+  <div class="note">
+    これらは意図的に <strong>検出しません</strong>。数字だけの拡張子を無条件に拾うと ID / バージョン / 連番ページを大量に誤検出するため、
+    「同一ベースの連番が2つ以上・0/1始まり・同一ディレクトリ・音声/動画でない」系列だけを昇格させています。
+  </div>
+  <ul class="files">
+    <li><a href="../files/split/lonely.001">lonely.001</a> — 単独（連番の仲間がいない）</li>
+    <li><a href="../files/split/gaps.001">gaps.001</a> / <a href="../files/split/gaps.050">gaps.050</a> — 連続していない</li>
+    <li><a href="../files/split/post.1001">post.1001</a> / <a href="../files/split/post.1002">post.1002</a> / <a href="../files/split/post.1003">post.1003</a> — 連番IDっぽいリンク（.001 始まりでない）</li>
+    <li><a href="../files/split/movie.mkv.001">movie.mkv.001</a> / <a href="../files/split/movie.mkv.002">movie.mkv.002</a> — 生の動画を分割（AV除外・ストリームリッパー禁止）</li>
+    <li><a href="../files/split/a/vol.001">a/vol.001</a> / <a href="../files/split/b/vol.002">b/vol.002</a> — 同名だが別ディレクトリ（無関係）</li>
+  </ul>
+
+  <footer>
+    検出ロジック: <code>lib/file-utils.js</code>（<code>splitVolumeHighRe</code> / <code>splitVolumeSeriesBases</code>）、
+    <code>popup.js</code> の scanFunc 系列プリパス。回帰テスト: <code>test-split-volume.cjs</code>。
+  </footer>
+</div>
+</body>
+</html>

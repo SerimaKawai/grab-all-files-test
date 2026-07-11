@@ -11,6 +11,7 @@
   {"id":"query-filetype","site_class":"legacy-api","item":{"url":"https://legacy.example/serve?file_type=pdf"},"min_score":82,"level":"high","reasons":["url-extension"]},
   {"id":"query-contenttype","site_class":"legacy-api","item":{"url":"https://legacy.example/serve?contentType=application%2Fpdf"},"min_score":82,"level":"high","reasons":["url-extension"]},
   {"id":"query-docname-image","site_class":"europresse-media","item":{"url":"https://proxy.example/media.aspx?Type=image&DocName=photo.jpg"},"min_score":88,"level":"high","reasons":["query-filename","url-extension"]},
+  {"id":"query-nested-url","site_class":"redirect-proxy","item":{"url":"https://proxy.example/redirect?url=https%3A%2F%2Fcdn.example%2Ffiles%2Fnested.pdf"},"min_score":88,"level":"high","reasons":["query-filename","url-extension"]},
   {"id":"s3-signed","site_class":"s3","item":{"url":"https://bucket.s3.amazonaws.com/object?X-Amz-Signature=abc"},"min_score":64,"level":"medium","reasons":["signed-url"]},
   {"id":"gcs-signed","site_class":"gcs","item":{"url":"https://storage.googleapis.com/bucket/object?X-Goog-Signature=abc"},"min_score":64,"level":"medium","reasons":["signed-url"]},
   {"id":"cloudfront-signed","site_class":"cdn","item":{"url":"https://cdn.example/object?Key-Pair-Id=K1&Signature=abc"},"min_score":64,"level":"medium","reasons":["signed-url"]},

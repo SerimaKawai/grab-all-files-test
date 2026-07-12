@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="refresh" content="0;url=https://example.invalid/">
+  <base href="https://example.invalid/">
+  <title>第4章 安全化テスト</title>
+  <script>window.__collectorScriptRan = true;</script>
+</head>
+<body onload="window.__collectorOnloadRan = true">
+  <main class="wiki-content">
+    <h1>第4章 安全化テスト</h1>
+    <p>安全な本文は残ります。</p>
+    <a href="javascript:alert(1)">危険なリンク</a>
+    <img src="x" onerror="alert(1)" alt="壊れた画像">
+    <form action="/delete"><input name="token" value="secret"><button>送信</button></form>
+    <iframe src="https://example.invalid/"></iframe>
+    <svg onload="alert(1)"><script>alert(2)</script><circle cx="5" cy="5" r="5"/></svg>
+  </main>
+</body>
+</html>

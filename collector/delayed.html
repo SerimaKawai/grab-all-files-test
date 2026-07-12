@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ja">
+<head><meta charset="utf-8"><title>第3章 遅延描画</title></head>
+<body>
+  <nav><a href="index.html">目次</a></nav>
+  <div id="app"><p>読み込み中...</p></div>
+  <script>
+    setTimeout(() => {
+      const main = document.createElement('main');
+      main.className = 'wiki-content';
+      const heading = document.createElement('h1');
+      heading.textContent = '第3章 遅延描画';
+      const paragraph = document.createElement('p');
+      paragraph.textContent = 'この本文はJavaScriptで描画されました。';
+      main.append(heading, paragraph);
+      document.getElementById('app').replaceChildren(main);
+    }, 500);
+  </script>
+</body>
+</html>

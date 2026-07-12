@@ -146,6 +146,24 @@ python -m http.server 8080
 
 実コンテンツが必要な場合は `files/` 配下の任意のファイルを差し替えてください。
 
+## Webページ → HTML 収集モード
+
+`collector/` は、複数ページ収集機能のローカル受入確認用フィクスチャです。相対リンク・相対画像、遅延描画、危険なHTML、Shift_JIS、HTTPエラーを確認できます。
+
+PHPフィクスチャを含むため、次のようにPHP組み込みサーバーで開いてください。
+
+```powershell
+C:\xampp\php\php.exe -S 127.0.0.1:8098 -t C:\xampp\htdocs\filescanner\test-site
+```
+
+1. `http://127.0.0.1:8098/collector/index.html` を開く
+2. 拡張機能の「Webページ → HTML」を開く
+3. 「自動でメニューを探す」で候補を発見し、3ページをプレビューする
+4. 抽出後のHTMLにスクリプト、イベント属性、外部通信が残らないことを確認する
+5. `shift-jis.php`、`http-status.php?status=429`、`delayed.html` は個別の取得・再試行確認に使う
+
+ソース側の自動テストは `npm run test:collector` で実行します。
+
 ## 注意事項
 
 - `09-misdetection-traps.html` の URL は**結果に現れないこと**が成功条件です

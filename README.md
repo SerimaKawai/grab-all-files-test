@@ -161,6 +161,7 @@ C:\xampp\php\php.exe -S 127.0.0.1:8098 -t C:\xampp\htdocs\filescanner\test-site
 3. 「自動でメニューを探す」で候補を発見し、3ページをプレビューする
 4. 抽出後のHTMLにスクリプト、イベント属性、外部通信が残らないことを確認する
 5. `shift-jis.php`、`http-status.php?status=429`、`delayed.html` は個別の取得・再試行確認に使う
+6. `bulk.php?page=1` からクエリ番号を変えたURLは100ページ超の負荷確認に使う
 
 ソース側の自動テストは `npm run test:collector` で実行します。
 
